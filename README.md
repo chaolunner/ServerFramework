@@ -1,2 +1,10 @@
 # ServerFramework
-A socket-based TCP server framework written in C#
+
+Created by chaolun
+
+Reference
+---
+
+* [ServerFramework/wiki](https://github.com/chaolunner/ServerFramework/wiki)
+
+  ServerFramework documents.
