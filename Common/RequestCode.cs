@@ -3,5 +3,6 @@
     public enum RequestCode
     {
         None,
+        Login,
     }
 }

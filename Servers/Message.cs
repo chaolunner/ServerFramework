@@ -1,7 +1,7 @@
-﻿using System;
-using Common;
-using System.Text;
+﻿using System.Text;
 using System.Linq;
+using System;
+using Common;
 
 namespace ServerFramework.Servers
 {
@@ -25,7 +25,7 @@ namespace ServerFramework.Servers
             get { return data.Length - startIndex; }
         }
 
-        public void Process(int count, Action<RequestCode, ActionCode, string> callback)
+        public void Process(int count, Action<RequestCode, string> callback)
         {
             startIndex += count;
             while (true)
@@ -36,9 +36,8 @@ namespace ServerFramework.Servers
                 if (startIndex >= totalCount)
                 {
                     RequestCode requestCode = (RequestCode)BitConverter.ToInt32(data, 4);
-                    ActionCode actionCode = (ActionCode)BitConverter.ToInt32(data, 8);
-                    string msg = Encoding.UTF8.GetString(data, 12, msgCount - 8);
-                    callback?.Invoke(requestCode, actionCode, msg);
+                    string msg = Encoding.UTF8.GetString(data, 8, msgCount - 4);
+                    callback?.Invoke(requestCode, msg);
                     Array.Copy(data, totalCount, data, 0, startIndex - totalCount);
                     startIndex -= totalCount;
                 }

@@ -1,18 +1,32 @@
-﻿using System;
-using Common;
-using System.Net;
+﻿using System.Collections.Generic;
 using System.Net.Sockets;
-using System.Collections.Generic;
-using ServerFramework.Controller;
+using System.Net;
+using System;
+using Common;
 
 namespace ServerFramework.Servers
 {
-    class Server
+    public interface IServerRequestReceiver
     {
+        void Receive(RequestCode requestCode, Func<Client, string, string> action);
+    }
+
+    public interface IServerRequestResponser
+    {
+        void Response(Client client, RequestCode requestCode, string data);
+    }
+
+    public interface IServer : IServerRequestReceiver, IServerRequestResponser { }
+
+    class Server : IServer, IDisposable
+    {
+        public static readonly IServer Default = new Server();
+
+        private bool isDisposed = false;
         private IPEndPoint ipEndPoint;
         private Socket serverSocket;
         private List<Client> clientList;
-        private ControllerManager controllerManager;
+        private readonly Dictionary<RequestCode, List<Func<Client, string, string>>> notifiers = new Dictionary<RequestCode, List<Func<Client, string, string>>>();
 
         public Server() { Initialize(); }
         public Server(string ipStr, int port)
@@ -24,7 +38,6 @@ namespace ServerFramework.Servers
         private void Initialize()
         {
             clientList = new List<Client>();
-            controllerManager = new ControllerManager(this);
         }
 
         public void SetIpAndPort(string ipStr, int port)
@@ -44,7 +57,7 @@ namespace ServerFramework.Servers
         {
             Socket clientSocket = serverSocket.EndAccept(ar);
             Client client = new Client(clientSocket);
-            client.OnRequest += HandleRequest;
+            client.OnRequest += Response;
             client.OnEnd += RemoveClient;
             client.Start();
             clientList.Add(client);
@@ -54,20 +67,53 @@ namespace ServerFramework.Servers
         {
             lock (clientList)
             {
-                client.OnRequest -= HandleRequest;
+                client.OnRequest -= Response;
                 client.OnEnd -= RemoveClient;
                 clientList.Remove(client);
             }
         }
 
-        public void HandleRequest(Client client, RequestCode requestCode, ActionCode actionCode, string data)
+        public void Receive(RequestCode requestCode, Func<Client, string, string> func)
         {
-            controllerManager.HandleRequest(client, requestCode, actionCode, data);
+            if (!notifiers.ContainsKey(requestCode))
+            {
+                notifiers.Add(requestCode, new List<Func<Client, string, string>>());
+            }
+            notifiers[requestCode].Add(func);
         }
 
-        public void SendResponse(Client client, RequestCode requsetCode, string data)
+        public void Response(Client client, RequestCode requestCode, string data)
         {
-            client.Send(requsetCode, data);
+            if (notifiers.ContainsKey(requestCode))
+            {
+                foreach (var func in notifiers[requestCode])
+                {
+                    var result = func?.Invoke(client, data);
+                    if (result == null || string.IsNullOrEmpty(result))
+                    {
+                    }
+                    else
+                    {
+                        client.Publish(requestCode, result);
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("The controller corresponding to " + requestCode + " could not be found.");
+            }
+        }
+
+        public void Dispose()
+        {
+            lock (notifiers)
+            {
+                if (!isDisposed)
+                {
+                    isDisposed = true;
+                    notifiers.Clear();
+                }
+            }
         }
     }
 }

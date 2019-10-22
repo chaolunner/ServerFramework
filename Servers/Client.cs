@@ -1,19 +1,30 @@
-﻿using System;
-using Common;
-using System.Net;
-using System.Net.Sockets;
+﻿using MySql.Data.MySqlClient;
 using ServerFramework.Tool;
-using MySql.Data.MySqlClient;
+using System.Net.Sockets;
+using System;
+using Common;
 
 namespace ServerFramework.Servers
 {
-    class Client
+    public interface IClientRequestPublisher
+    {
+        void Publish(RequestCode requestCode, string data);
+    }
+
+    public interface IClientRequestResponser
+    {
+        void Response(RequestCode requestCode, string data);
+    }
+
+    public interface IClient : IClientRequestPublisher, IClientRequestResponser { }
+
+    public class Client : IClient
     {
         private Socket clientSocket;
         private Message msg = new Message();
         private MySqlConnection mySqlConn;
 
-        public delegate void RequestHandler(Client client, RequestCode requestCode, ActionCode actionCode, string data);
+        public delegate void RequestHandler(Client client, RequestCode requestCode, string data);
         public delegate void EndHandler(Client client);
         public event RequestHandler OnRequest;
         public event EndHandler OnEnd;
@@ -41,7 +52,7 @@ namespace ServerFramework.Servers
                 }
                 else
                 {
-                    msg.Process(count, OnMessageProcessed);
+                    msg.Process(count, Response);
                     Start();
                 }
             }
@@ -52,9 +63,9 @@ namespace ServerFramework.Servers
             }
         }
 
-        private void OnMessageProcessed(RequestCode requestCode, ActionCode actionCode, string data)
+        public void Response(RequestCode requestCode, string data)
         {
-            OnRequest?.Invoke(this, requestCode, actionCode, data);
+            OnRequest?.Invoke(this, requestCode, data);
         }
 
         private void End()
@@ -69,7 +80,7 @@ namespace ServerFramework.Servers
             }
         }
 
-        public void Send(RequestCode requsetCode, string data)
+        public void Publish(RequestCode requsetCode, string data)
         {
             byte[] bytes = Message.Pack(requsetCode, data);
             clientSocket.Send(bytes);
