@@ -47,20 +47,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controller\BaseController.cs" />
+    <Compile Include="Controller\ControllerManager.cs" />
+    <Compile Include="Controller\IController.cs" />
+    <Compile Include="Controller\UserController.cs" />
+    <Compile Include="DAO\UserDAO.cs" />
+    <Compile Include="Extensions\IControllerExtensions.cs" />
+    <Compile Include="Model\User.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Servers\Client.cs" />
-    <Compile Include="Servers\Message.cs" />
     <Compile Include="Servers\Server.cs" />
     <Compile Include="Tool\ConnHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="DAO\" />
-    <Folder Include="Model\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="Common\Common.csproj">
       <Project>{ca971c9a-fe81-46aa-a2d7-4c06ad56d730}</Project>

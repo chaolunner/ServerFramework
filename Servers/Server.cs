@@ -6,38 +6,28 @@ using Common;
 
 namespace ServerFramework.Servers
 {
-    public interface IServerRequestReceiver
+    public interface IServer
     {
+        void SetIpAndPort(string ipStr, int port);
+        void Start();
         void Receive(RequestCode requestCode, Func<Client, string, string> action);
-    }
-
-    public interface IServerRequestResponser
-    {
         void Response(Client client, RequestCode requestCode, string data);
     }
-
-    public interface IServer : IServerRequestReceiver, IServerRequestResponser { }
 
     class Server : IServer, IDisposable
     {
         public static readonly IServer Default = new Server();
 
         private bool isDisposed = false;
-        private IPEndPoint ipEndPoint;
+        private IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9663);
         private Socket serverSocket;
-        private List<Client> clientList;
+        private readonly List<Client> clientList = new List<Client>();
         private readonly Dictionary<RequestCode, List<Func<Client, string, string>>> notifiers = new Dictionary<RequestCode, List<Func<Client, string, string>>>();
 
-        public Server() { Initialize(); }
+        public Server() { }
         public Server(string ipStr, int port)
         {
-            Initialize();
             SetIpAndPort(ipStr, port);
-        }
-
-        private void Initialize()
-        {
-            clientList = new List<Client>();
         }
 
         public void SetIpAndPort(string ipStr, int port)
@@ -57,7 +47,7 @@ namespace ServerFramework.Servers
         {
             Socket clientSocket = serverSocket.EndAccept(ar);
             Client client = new Client(clientSocket);
-            client.OnRequest += Response;
+            client.OnResponse += Response;
             client.OnEnd += RemoveClient;
             client.Start();
             clientList.Add(client);
@@ -67,7 +57,7 @@ namespace ServerFramework.Servers
         {
             lock (clientList)
             {
-                client.OnRequest -= Response;
+                client.OnResponse -= Response;
                 client.OnEnd -= RemoveClient;
                 clientList.Remove(client);
             }
@@ -100,7 +90,7 @@ namespace ServerFramework.Servers
             }
             else
             {
-                Console.WriteLine("The controller corresponding to " + requestCode + " could not be found.");
+                Console.WriteLine("The notifier corresponding to " + requestCode + " could not be found.");
             }
         }
 

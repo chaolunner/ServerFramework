@@ -6,17 +6,12 @@ using Common;
 
 namespace ServerFramework.Servers
 {
-    public interface IClientRequestPublisher
+    public interface IClient
     {
+        void Start();
         void Publish(RequestCode requestCode, string data);
-    }
-
-    public interface IClientRequestResponser
-    {
         void Response(RequestCode requestCode, string data);
     }
-
-    public interface IClient : IClientRequestPublisher, IClientRequestResponser { }
 
     public class Client : IClient
     {
@@ -26,8 +21,16 @@ namespace ServerFramework.Servers
 
         public delegate void RequestHandler(Client client, RequestCode requestCode, string data);
         public delegate void EndHandler(Client client);
-        public event RequestHandler OnRequest;
+        public event RequestHandler OnResponse;
         public event EndHandler OnEnd;
+
+        public MySqlConnection MySqlConn
+        {
+            get
+            {
+                return mySqlConn;
+            }
+        }
 
         public Client() { }
         public Client(Socket clientSocket)
@@ -65,7 +68,7 @@ namespace ServerFramework.Servers
 
         public void Response(RequestCode requestCode, string data)
         {
-            OnRequest?.Invoke(this, requestCode, data);
+            OnResponse?.Invoke(this, requestCode, data);
         }
 
         private void End()

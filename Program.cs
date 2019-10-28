@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ServerFramework.Controller;
+using ServerFramework.Servers;
+using System;
 
 namespace ServerFramework
 {
@@ -6,6 +8,11 @@ namespace ServerFramework
     {
         static void Main(string[] args)
         {
+            Server.Default.Start();
+
+            ControllerManager.Default.Start();
+
+            Console.ReadKey();
         }
     }
 }

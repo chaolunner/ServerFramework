@@ -1,11 +1,10 @@
 ﻿using System.Text;
 using System.Linq;
 using System;
-using Common;
 
-namespace ServerFramework.Servers
+namespace Common
 {
-    class Message
+    public class Message
     {
         private byte[] data = new byte[1024];
         private int startIndex = 0;
