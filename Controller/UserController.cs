@@ -22,5 +22,19 @@ namespace ServerFramework.Controller
                 return ((int)ReturnCode.Success).ToString();
             }
         }
+
+        public string OnRegister(Client client, string data)
+        {
+            string[] strs = data.Split(Separator);
+            string username = strs[0];
+            string password = strs[1];
+            bool hasUser = userDAO.HasUser(client.MySqlConn, username);
+            if (hasUser)
+            {
+                return ((int)ReturnCode.Fail).ToString();
+            }
+            userDAO.AddUser(client.MySqlConn, username, password);
+            return ((int)ReturnCode.Success).ToString();
+        }
     }
 }

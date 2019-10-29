@@ -14,6 +14,7 @@ namespace ServerFramework.Controller
         {
             UserController userController = new UserController();
             userController.Bind(RequestCode.Login, userController.OnLogin);
+            userController.Bind(RequestCode.Register, userController.OnRegister);
             controllers.Add(userController);
         }
     }
