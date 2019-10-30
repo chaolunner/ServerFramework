@@ -41,17 +41,13 @@ namespace ServerFramework.Servers
 
         public void Start()
         {
-            if (clientSocket != null && clientSocket.Connected)
-            {
-                clientSocket.BeginReceive(msg.Data, msg.StartIndex, msg.RemainSize, SocketFlags.None, ReceiveCallback, null);
-            }
+            clientSocket.BeginReceive(msg.Data, msg.StartIndex, msg.RemainSize, SocketFlags.None, ReceiveCallback, null);
         }
 
         private void ReceiveCallback(IAsyncResult ar)
         {
             try
             {
-                if (clientSocket == null || !clientSocket.Connected) { return; }
                 int count = clientSocket.EndReceive(ar);
                 if (count == 0)
                 {

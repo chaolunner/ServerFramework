@@ -8,6 +8,8 @@ namespace ServerFramework.Controller
     class UserController : BaseController
     {
         private UserDAO userDAO = new UserDAO();
+        private ResultDAO resultDAO = new ResultDAO();
+        private const string LoginSuccessStr = "{0},{1},{2},{3}";
 
         public string OnLogin(Client client, string data)
         {
@@ -19,7 +21,8 @@ namespace ServerFramework.Controller
             }
             else
             {
-                return ((int)ReturnCode.Success).ToString();
+                Result result = resultDAO.GetResultByUserId(client.MySqlConn, user.Id);
+                return string.Format(LoginSuccessStr, ((int)ReturnCode.Success).ToString(), user.Username, result.TotalCount, result.WinCount);
             }
         }
 

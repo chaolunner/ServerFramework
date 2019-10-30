@@ -51,6 +51,7 @@ namespace ServerFramework.Servers
             client.OnEnd += RemoveClient;
             client.Start();
             clientList.Add(client);
+            serverSocket.BeginAccept(AcceptCallback, null);
         }
 
         private void RemoveClient(Client client)
