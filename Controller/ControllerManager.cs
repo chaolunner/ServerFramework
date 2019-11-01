@@ -16,6 +16,10 @@ namespace ServerFramework.Controller
             userController.Bind(RequestCode.Login, userController.OnLogin);
             userController.Bind(RequestCode.Register, userController.OnRegister);
             controllers.Add(userController);
+
+            RoomController roomController = new RoomController();
+            roomController.Bind(RequestCode.CreateRoom, roomController.CreateRoom);
+            controllers.Add(roomController);
         }
     }
 }
