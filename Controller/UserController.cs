@@ -12,7 +12,7 @@ namespace ServerFramework.Controller
         private ResultDAO resultDAO = new ResultDAO();
         private Dictionary<Client, User> userDict = new Dictionary<Client, User>();
         private Dictionary<Client, Result> resultDict = new Dictionary<Client, Result>();
-        private const string UserResultStr = "{0},{1},{2}";
+        private const string UserResultStr = "{0},{1},{2},{3}";
         private const string LoginSuccessStr = "{0},{1}";
 
         public string OnLogin(Client client, string data)
@@ -46,9 +46,22 @@ namespace ServerFramework.Controller
             return ((int)ReturnCode.Success).ToString();
         }
 
+        public int GetUserId(Client client)
+        {
+            if (userDict.ContainsKey(client))
+            {
+                return userDict[client].Id;
+            }
+            return -1;
+        }
+
         public string GetUserResult(Client client)
         {
-            return string.Format(UserResultStr, userDict[client].Username, resultDict[client].TotalCount, resultDict[client].WinCount);
+            if (userDict.ContainsKey(client) && resultDict.ContainsKey(client))
+            {
+                return string.Format(UserResultStr, userDict[client].Id, userDict[client].Username, resultDict[client].TotalCount, resultDict[client].WinCount);
+            }
+            return EmptyStr;
         }
     }
 }

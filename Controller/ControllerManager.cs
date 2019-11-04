@@ -21,6 +21,7 @@ namespace ServerFramework.Controller
             RoomController roomController = new RoomController();
             roomController.Bind(RequestCode.CreateRoom, roomController.OnCreateRoom);
             roomController.Bind(RequestCode.ListRooms, roomController.OnListRoom);
+            roomController.Bind(RequestCode.JoinRoom, roomController.OnJoinRoom);
             controllerDict.Add(roomController.GetType(), roomController);
         }
 

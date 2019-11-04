@@ -7,24 +7,33 @@ namespace ServerFramework.Controller
 {
     class RoomController : BaseController
     {
-        private List<Room> roomList = new List<Room>();
+        public UserController UserController { get; } = ControllerManager.Default.GetController<UserController>();
+        private Dictionary<int, Room> roomDict = new Dictionary<int, Room>();
 
         public string OnCreateRoom(Client client, string data)
         {
-            Room room = new Room();
-            room.AddClient(client);
-            roomList.Add(room);
-            return ((int)ReturnCode.Success).ToString();
+            int userId = UserController.GetUserId(client);
+            if (userId >= 0)
+            {
+                if (!roomDict.ContainsKey(userId))
+                {
+                    Room room = new Room();
+                    room.AddClient(client);
+                    roomDict.Add(userId, room);
+                }
+                return ((int)ReturnCode.Success).ToString();
+            }
+            return ((int)ReturnCode.Fail).ToString();
         }
 
         public string OnListRoom(Client client, string data)
         {
             StringBuilder stringBuilder = new StringBuilder();
-            foreach (Room room in roomList)
+            foreach (var kvp in roomDict)
             {
-                if (room.IsWaitingToJoin())
+                if (kvp.Value.IsWaitingToJoin())
                 {
-                    stringBuilder.Append(ControllerManager.Default.GetController<UserController>().GetUserResult(room.GetOwner()) + VerticalBar);
+                    stringBuilder.Append(UserController.GetUserResult(kvp.Value.GetOwner()) + VerticalBar);
                 }
             }
             if (stringBuilder.Length > 0)
@@ -32,6 +41,17 @@ namespace ServerFramework.Controller
                 stringBuilder.Remove(stringBuilder.Length - 1, 1);
             }
             return stringBuilder.ToString();
+        }
+
+        public string OnJoinRoom(Client client, string data)
+        {
+            int userId = int.Parse(data);
+            if (roomDict.ContainsKey(userId))
+            {
+                roomDict[userId].AddClient(client);
+                return ((int)ReturnCode.Success).ToString();
+            }
+            return ((int)ReturnCode.Fail).ToString();
         }
     }
 }

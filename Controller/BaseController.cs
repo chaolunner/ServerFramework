@@ -4,5 +4,6 @@
     {
         protected const char Separator = ',';
         protected const char VerticalBar = '|';
+        protected const string EmptyStr = "";
     }
 }
