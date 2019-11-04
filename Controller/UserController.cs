@@ -1,4 +1,5 @@
-﻿using ServerFramework.Servers;
+﻿using System.Collections.Generic;
+using ServerFramework.Servers;
 using ServerFramework.Model;
 using ServerFramework.DAO;
 using Common;
@@ -9,7 +10,10 @@ namespace ServerFramework.Controller
     {
         private UserDAO userDAO = new UserDAO();
         private ResultDAO resultDAO = new ResultDAO();
-        private const string LoginSuccessStr = "{0},{1},{2},{3}";
+        private Dictionary<Client, User> userDict = new Dictionary<Client, User>();
+        private Dictionary<Client, Result> resultDict = new Dictionary<Client, Result>();
+        private const string UserResultStr = "{0},{1},{2}";
+        private const string LoginSuccessStr = "{0},{1}";
 
         public string OnLogin(Client client, string data)
         {
@@ -22,7 +26,9 @@ namespace ServerFramework.Controller
             else
             {
                 Result result = resultDAO.GetResultByUserId(client.MySqlConn, user.Id);
-                return string.Format(LoginSuccessStr, ((int)ReturnCode.Success).ToString(), user.Username, result.TotalCount, result.WinCount);
+                userDict.Add(client, user);
+                resultDict.Add(client, result);
+                return string.Format(LoginSuccessStr, ((int)ReturnCode.Success).ToString(), GetUserResult(client));
             }
         }
 
@@ -38,6 +44,11 @@ namespace ServerFramework.Controller
             }
             userDAO.AddUser(client.MySqlConn, username, password);
             return ((int)ReturnCode.Success).ToString();
+        }
+
+        public string GetUserResult(Client client)
+        {
+            return string.Format(UserResultStr, userDict[client].Username, resultDict[client].TotalCount, resultDict[client].WinCount);
         }
     }
 }

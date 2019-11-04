@@ -19,5 +19,15 @@ namespace ServerFramework.Servers
         {
             clientList.Add(client);
         }
+
+        public bool IsWaitingToJoin()
+        {
+            return state == RoomState.Join;
+        }
+
+        public Client GetOwner()
+        {
+            return clientList[0];
+        }
     }
 }

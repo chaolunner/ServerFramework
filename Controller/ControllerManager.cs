@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using ServerFramework.Extensions;
+using System;
 using Common;
 
 namespace ServerFramework.Controller
@@ -8,18 +9,29 @@ namespace ServerFramework.Controller
     {
         public static readonly ControllerManager Default = new ControllerManager();
 
-        private readonly List<IController> controllers = new List<IController>();
+        private readonly Dictionary<Type, IController> controllerDict = new Dictionary<Type, IController>();
 
         public void Start()
         {
             UserController userController = new UserController();
             userController.Bind(RequestCode.Login, userController.OnLogin);
             userController.Bind(RequestCode.Register, userController.OnRegister);
-            controllers.Add(userController);
+            controllerDict.Add(userController.GetType(), userController);
 
             RoomController roomController = new RoomController();
-            roomController.Bind(RequestCode.CreateRoom, roomController.CreateRoom);
-            controllers.Add(roomController);
+            roomController.Bind(RequestCode.CreateRoom, roomController.OnCreateRoom);
+            roomController.Bind(RequestCode.ListRooms, roomController.OnListRoom);
+            controllerDict.Add(roomController.GetType(), roomController);
+        }
+
+        public T GetController<T>() where T : IController
+        {
+            Type type = typeof(T);
+            if (controllerDict.ContainsKey(type))
+            {
+                return (T)controllerDict[type];
+            }
+            return default;
         }
     }
 }

@@ -9,8 +9,8 @@ namespace ServerFramework.DAO
         private const string GetResultByUserIdCommand = "select * from result where userid = @userid";
         private const string UserIdParam = "userid";
         private const string IdParam = "id";
-        private const string TotalCountParam = "id";
-        private const string WinCountParam = "id";
+        private const string TotalCountParam = "totalCount";
+        private const string WinCountParam = "winCount";
 
         public Result GetResultByUserId(MySqlConnection conn, int userId)
         {
