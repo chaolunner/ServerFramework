@@ -8,5 +8,6 @@
         ListRooms,
         CreateRoom,
         JoinRoom,
+        QuitRoom,
     }
 }

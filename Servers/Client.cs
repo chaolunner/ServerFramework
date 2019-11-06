@@ -85,8 +85,11 @@ namespace ServerFramework.Servers
 
         public void Publish(RequestCode requsetCode, string data)
         {
-            byte[] bytes = Message.Pack(requsetCode, data);
-            clientSocket.Send(bytes);
+            if (clientSocket != null && clientSocket.Connected)
+            {
+                byte[] bytes = Message.Pack(requsetCode, data);
+                clientSocket.Send(bytes);
+            }
         }
     }
 }

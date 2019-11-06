@@ -22,6 +22,7 @@ namespace ServerFramework.Controller
             roomController.Bind(RequestCode.CreateRoom, roomController.OnCreateRoom);
             roomController.Bind(RequestCode.ListRooms, roomController.OnListRoom);
             roomController.Bind(RequestCode.JoinRoom, roomController.OnJoinRoom);
+            roomController.Bind(RequestCode.QuitRoom, roomController.OnQuitRoom);
             controllerDict.Add(roomController.GetType(), roomController);
         }
 

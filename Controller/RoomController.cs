@@ -71,15 +71,34 @@ namespace ServerFramework.Controller
             return ((int)ReturnCode.Fail).ToString();
         }
 
-        private void OnEnd(Room room)
+        public string OnQuitRoom(Client client, string data)
         {
-            int userId = this.GetController<UserController>().GetUserId(room.GetOwner());
+            int userId = this.GetController<UserController>().GetUserId(client);
             if (userId >= 0 && roomDict.ContainsKey(userId))
             {
-                roomDict.Remove(userId);
+                roomDict[userId].Quit(client);
+            }
+            return userId.ToString();
+        }
+
+        private void OnEnd(Room room, Client client)
+        {
+            foreach (Client guest in room.ClientList)
+            {
+                int guestId = this.GetController<UserController>().GetUserId(guest);
+                if (guestId >= 0)
+                {
+                    guest.Publish(RequestCode.QuitRoom, guestId.ToString());
+                }
+            }
+            Client roomOwner = room.GetOwner() ?? client;
+            int roomOwnerId = this.GetController<UserController>().GetUserId(roomOwner);
+            if (roomOwnerId >= 0 && roomDict.ContainsKey(roomOwnerId))
+            {
+                roomDict.Remove(roomOwnerId);
+                room.OnEnd -= OnEnd;
             }
             UpdateRoomList();
-            room.OnEnd -= OnEnd;
         }
 
         public void UpdateRoomList()

@@ -14,7 +14,7 @@ namespace ServerFramework.Servers
     {
         public RoomState State { get; set; } = RoomState.Join;
         public List<Client> ClientList { get; set; } = new List<Client>();
-        public delegate void EndHandler(Room room);
+        public delegate void EndHandler(Room room, Client client);
         public event EndHandler OnEnd;
 
         public Room(Client client)
@@ -25,19 +25,34 @@ namespace ServerFramework.Servers
 
         public void AddClient(Client client)
         {
+            client.OnEnd += Quit;
             ClientList.Add(client);
         }
 
         public Client GetOwner()
         {
-            return ClientList[0];
+            if (ClientList.Count > 0)
+            {
+                return ClientList[0];
+            }
+            return null;
         }
 
         public void Quit(Client client)
         {
-            State = RoomState.Join;
-            OnEnd?.Invoke(this);
-            ClientList.Clear();
+            if (client == GetOwner())
+            {
+                ClientList.Clear();
+            }
+            else if (ClientList.Contains(client))
+            {
+                ClientList.Remove(client);
+            }
+            if (ClientList.Count < 2)
+            {
+                State = RoomState.Join;
+            }
+            OnEnd?.Invoke(this, client);
             client.OnEnd -= Quit;
         }
     }
