@@ -12,22 +12,33 @@ namespace ServerFramework.Servers
 
     class Room
     {
-        private List<Client> clientList = new List<Client>();
-        private RoomState state = RoomState.Join;
+        public RoomState State { get; set; } = RoomState.Join;
+        public List<Client> ClientList { get; set; } = new List<Client>();
+        public delegate void EndHandler(Room room);
+        public event EndHandler OnEnd;
+
+        public Room(Client client)
+        {
+            client.OnEnd += Quit;
+            AddClient(client);
+        }
 
         public void AddClient(Client client)
         {
-            clientList.Add(client);
-        }
-
-        public bool IsWaitingToJoin()
-        {
-            return state == RoomState.Join;
+            ClientList.Add(client);
         }
 
         public Client GetOwner()
         {
-            return clientList[0];
+            return ClientList[0];
+        }
+
+        public void Quit(Client client)
+        {
+            State = RoomState.Join;
+            OnEnd?.Invoke(this);
+            ClientList.Clear();
+            client.OnEnd -= Quit;
         }
     }
 }

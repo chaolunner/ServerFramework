@@ -11,5 +11,15 @@ namespace ServerFramework.Extensions
         {
             Server.Default.Receive(requestCode, action);
         }
+
+        public static void Publish(this IController controller, RequestCode requestCode, string data)
+        {
+            Server.Default.Publish(requestCode, data);
+        }
+
+        public static T GetController<T>(this IController controller) where T : IController
+        {
+            return ControllerManager.Default.GetController<T>();
+        }
     }
 }

@@ -10,6 +10,7 @@ namespace ServerFramework.Servers
     {
         void SetIpAndPort(string ipStr, int port);
         void Start();
+        void Publish(RequestCode requestCode, string data);
         void Receive(RequestCode requestCode, Func<Client, string, string> action);
         void Response(Client client, RequestCode requestCode, string data);
     }
@@ -61,6 +62,14 @@ namespace ServerFramework.Servers
                 client.OnResponse -= Response;
                 client.OnEnd -= RemoveClient;
                 clientList.Remove(client);
+            }
+        }
+
+        public void Publish(RequestCode requestCode, string data)
+        {
+            foreach (Client client in clientList)
+            {
+                client.Publish(requestCode, data);
             }
         }
 
