@@ -35,7 +35,7 @@ namespace ServerFramework.Controller
             {
                 if (kvp.Value.State == RoomState.Join)
                 {
-                    stringBuilder.Append(this.GetController<UserController>().GetUserResult(kvp.Value.GetOwner()) + VerticalBar);
+                    stringBuilder.Append(this.GetController<UserController>().GetUserResult(kvp.Value.Owner) + VerticalBar);
                 }
             }
             if (stringBuilder.Length > 0)
@@ -47,17 +47,16 @@ namespace ServerFramework.Controller
 
         public string OnJoinRoom(Client client, string data)
         {
-            int userId = int.Parse(data);
-            if (roomDict.ContainsKey(userId))
+            int ownerId = int.Parse(data);
+            if (ownerId >= 0 && roomDict.ContainsKey(ownerId))
             {
-                Room room = roomDict[userId];
-                Client owner = room.GetOwner();
+                Room room = roomDict[ownerId];
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.Append((int)ReturnCode.Success);
                 stringBuilder.Append(VerticalBar + this.GetController<UserController>().GetUserResult(client) + Separator + false);
                 foreach (Client guest in room.ClientList)
                 {
-                    stringBuilder.Append(VerticalBar + this.GetController<UserController>().GetUserResult(guest) + Separator + (guest == owner));
+                    stringBuilder.Append(VerticalBar + this.GetController<UserController>().GetUserResult(guest) + Separator + (guest == room.Owner));
                 }
                 foreach (Client guest in room.ClientList)
                 {
@@ -73,29 +72,28 @@ namespace ServerFramework.Controller
 
         public string OnQuitRoom(Client client, string data)
         {
-            int userId = this.GetController<UserController>().GetUserId(client);
-            if (userId >= 0 && roomDict.ContainsKey(userId))
+            int ownerId = int.Parse(data);
+            if (ownerId >= 0 && roomDict.ContainsKey(ownerId))
             {
-                roomDict[userId].Quit(client);
+                roomDict[ownerId].Quit(client);
             }
-            return userId.ToString();
+            return this.GetController<UserController>().GetUserId(client).ToString();
         }
 
         private void OnEnd(Room room, Client client)
         {
-            foreach (Client guest in room.ClientList)
+            int userId = this.GetController<UserController>().GetUserId(client);
+            if (userId >= 0)
             {
-                int guestId = this.GetController<UserController>().GetUserId(guest);
-                if (guestId >= 0)
+                foreach (Client guest in room.ClientList)
                 {
-                    guest.Publish(RequestCode.QuitRoom, guestId.ToString());
+                    guest.Publish(RequestCode.QuitRoom, userId.ToString());
                 }
             }
-            Client roomOwner = room.GetOwner() ?? client;
-            int roomOwnerId = this.GetController<UserController>().GetUserId(roomOwner);
-            if (roomOwnerId >= 0 && roomDict.ContainsKey(roomOwnerId))
+            int ownerId = this.GetController<UserController>().GetUserId(client);
+            if (ownerId >= 0 && roomDict.ContainsKey(ownerId))
             {
-                roomDict.Remove(roomOwnerId);
+                roomDict.Remove(ownerId);
                 room.OnEnd -= OnEnd;
             }
             UpdateRoomList();
