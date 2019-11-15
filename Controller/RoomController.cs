@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using ServerFramework.Extensions;
 using ServerFramework.Servers;
 using System.Text;
 using Common;
@@ -48,9 +47,9 @@ namespace ServerFramework.Controller
         public string OnJoinRoom(Client client, string data)
         {
             int ownerId = int.Parse(data);
-            if (ownerId >= 0 && roomDict.ContainsKey(ownerId))
+            Room room = GetRoomByUserId(ownerId);
+            if (room != null)
             {
-                Room room = roomDict[ownerId];
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.Append((int)ReturnCode.Success);
                 stringBuilder.Append(VerticalBar + this.GetController<UserController>().GetUserResult(client) + Separator + false);
@@ -73,10 +72,8 @@ namespace ServerFramework.Controller
         public string OnQuitRoom(Client client, string data)
         {
             int ownerId = int.Parse(data);
-            if (ownerId >= 0 && roomDict.ContainsKey(ownerId))
-            {
-                roomDict[ownerId].Quit(client);
-            }
+            Room room = GetRoomByUserId(ownerId);
+            if (room != null) { room.Quit(client); }
             return this.GetController<UserController>().GetUserId(client).ToString();
         }
 
@@ -102,6 +99,21 @@ namespace ServerFramework.Controller
         public void UpdateRoomList()
         {
             this.Publish(RequestCode.ListRooms, OnListRoom(null, null));
+        }
+
+        public Room GetRoomByUserId(int userId)
+        {
+            if (roomDict.ContainsKey(userId))
+            {
+                return roomDict[userId];
+            }
+            return null;
+        }
+
+        public Room GetRoomByClient(Client client)
+        {
+            int userId = this.GetController<UserController>().GetUserId(client);
+            return GetRoomByUserId(userId);
         }
     }
 }

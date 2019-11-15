@@ -10,7 +10,7 @@ namespace ServerFramework.Servers
     {
         void SetIpAndPort(string ipStr, int port);
         void Start();
-        void Publish(RequestCode requestCode, string data);
+        void Publish(RequestCode requestCode, string data, List<Client> excludeClients);
         void Receive(RequestCode requestCode, Func<Client, string, string> action);
         void Response(Client client, RequestCode requestCode, string data);
     }
@@ -65,10 +65,11 @@ namespace ServerFramework.Servers
             }
         }
 
-        public void Publish(RequestCode requestCode, string data)
+        public void Publish(RequestCode requestCode, string data, List<Client> excludeClients)
         {
             foreach (Client client in clientList)
             {
+                if (excludeClients.Contains(client)) { continue; }
                 client.Publish(requestCode, data);
             }
         }

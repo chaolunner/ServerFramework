@@ -1,9 +1,10 @@
 ﻿using ServerFramework.Controller;
+using System.Collections.Generic;
 using ServerFramework.Servers;
 using System;
 using Common;
 
-namespace ServerFramework.Extensions
+namespace ServerFramework
 {
     static class IControllerExtensions
     {
@@ -12,9 +13,11 @@ namespace ServerFramework.Extensions
             Server.Default.Receive(requestCode, action);
         }
 
-        public static void Publish(this IController controller, RequestCode requestCode, string data)
+        public static void Publish(this IController controller, RequestCode requestCode, string data, params Client[] excludeClients)
         {
-            Server.Default.Publish(requestCode, data);
+            List<Client> excludeClientList = new List<Client>();
+            excludeClientList.AddRange(excludeClients);
+            Server.Default.Publish(requestCode, data, excludeClientList);
         }
 
         public static T GetController<T>(this IController controller) where T : IController

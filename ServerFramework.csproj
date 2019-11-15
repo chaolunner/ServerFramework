@@ -37,6 +37,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\MySQL\Connector NET 8.0\Assemblies\v4.5.2\MySql.Data.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -49,12 +52,15 @@
   <ItemGroup>
     <Compile Include="Controller\BaseController.cs" />
     <Compile Include="Controller\ControllerManager.cs" />
+    <Compile Include="Controller\GameController.cs" />
     <Compile Include="Controller\IController.cs" />
+    <Compile Include="Controller\LockstepController.cs" />
     <Compile Include="Controller\RoomController.cs" />
     <Compile Include="Controller\UserController.cs" />
     <Compile Include="DAO\ResultDAO.cs" />
     <Compile Include="DAO\UserDAO.cs" />
     <Compile Include="Extensions\IControllerExtensions.cs" />
+    <Compile Include="Servers\Game.cs" />
     <Compile Include="Model\Result.cs" />
     <Compile Include="Model\User.cs" />
     <Compile Include="Program.cs" />
@@ -66,6 +72,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using ServerFramework.Extensions;
+using System.Threading;
 using System;
 using Common;
 
@@ -24,6 +24,30 @@ namespace ServerFramework.Controller
             roomController.Bind(RequestCode.JoinRoom, roomController.OnJoinRoom);
             roomController.Bind(RequestCode.QuitRoom, roomController.OnQuitRoom);
             controllerDict.Add(roomController.GetType(), roomController);
+
+            GameController gameController = new GameController();
+            gameController.Bind(RequestCode.StartGame, gameController.OnStartGame);
+            controllerDict.Add(gameController.GetType(), gameController);
+
+            LockstepController lockstepController = new LockstepController();
+            lockstepController.Bind(RequestCode.Input, lockstepController.OnInput);
+            controllerDict.Add(lockstepController.GetType(), lockstepController);
+
+            while (true)
+            {
+                try
+                {
+                    foreach (var kvp in controllerDict)
+                    {
+                        kvp.Value.Update();
+                    }
+                    Thread.Sleep(20);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
         }
 
         public T GetController<T>() where T : IController
