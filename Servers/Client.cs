@@ -61,7 +61,7 @@ namespace ServerFramework.Servers
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                ConsoleUtility.WriteLine(e, ConsoleColor.Red);
                 End();
             }
         }

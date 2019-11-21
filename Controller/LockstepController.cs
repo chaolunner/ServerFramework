@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using ServerFramework.Servers;
-using Newtonsoft.Json;
-using System.Text;
 using Common;
 
 namespace ServerFramework.Controller
@@ -18,14 +16,14 @@ namespace ServerFramework.Controller
             {
                 if (!gameDict.ContainsKey(room))
                 {
+                    room.OnEnd += RemoveRoom;
                     gameDict.Add(room, new Game(room));
                 }
                 Game game = gameDict[room];
-                Input input = JsonConvert.DeserializeObject<Input>(data);
-                if (game.CurrentStep == input.Step)
-                {
-                    game.AddInput(userId, input);
-                }
+                UserInputs userInputs = JsonUtility.FromJson<UserInputs>(data);
+                userInputs.UserId = userId;
+                game.AddUserInputs(userInputs);
+                return ((int)ReturnCode.Success).ToString();
             }
             return ((int)ReturnCode.Fail).ToString();
         }
@@ -34,27 +32,23 @@ namespace ServerFramework.Controller
         {
             base.Update();
 
-            foreach (var game in gameDict.Values)
+            foreach (var kvp in gameDict)
             {
-                int currentStep = 0;
-                while (game.Next(out currentStep))
-                {
-                    StringBuilder stringBuilder = new StringBuilder();
-                    for (int i = 0; i < game.Count; i++)
-                    {
-                        int userId = this.GetController<UserController>().GetUserId(game.GetClient(i));
-                        stringBuilder.Append(userId);
-                        stringBuilder.Append(VerticalBar);
-                        stringBuilder.Append(JsonConvert.SerializeObject(game.GetInputByUserId(userId, currentStep)));
-                        stringBuilder.Append(VerticalBar);
-                    }
-                    if (stringBuilder.Length > 0)
-                    {
-                        stringBuilder.Remove(stringBuilder.Length - 1, 1);
-                    }
-                    this.Publish(RequestCode.Lockstep, stringBuilder.ToString());
-                }
+                Room room = kvp.Key;
+                Game game = kvp.Value;
+                LockstepInputs lockstepInputs = game.Next();
+                string data = JsonUtility.ToJson(lockstepInputs);
+                room.Publish(RequestCode.Lockstep, data);
             }
+        }
+
+        private void RemoveRoom(Room room, Client client)
+        {
+            if (gameDict.ContainsKey(room))
+            {
+                gameDict.Remove(room);
+            }
+            room.OnEnd -= RemoveRoom;
         }
     }
 }

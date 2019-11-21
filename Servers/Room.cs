@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Common;
 
 namespace ServerFramework.Servers
 {
@@ -28,6 +29,14 @@ namespace ServerFramework.Servers
         {
             client.OnEnd += Quit;
             ClientList.Add(client);
+        }
+
+        public void Publish(RequestCode requestCode, string data)
+        {
+            foreach (Client client in ClientList)
+            {
+                client.Publish(requestCode, data);
+            }
         }
 
         public void Quit(Client client)

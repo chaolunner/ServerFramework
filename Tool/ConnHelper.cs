@@ -1,5 +1,6 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
+using Common;
 
 namespace ServerFramework.Tool
 {
@@ -17,7 +18,7 @@ namespace ServerFramework.Tool
             }
             catch (Exception e)
             {
-                Console.WriteLine("An exception occurred while connecting to MySQL database: " + e);
+                ConsoleUtility.WriteLine("An exception occurred while connecting to MySQL database: " + e);
                 return null;
             }
         }

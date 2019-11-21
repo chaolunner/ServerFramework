@@ -101,7 +101,7 @@ namespace ServerFramework.Servers
             }
             else
             {
-                Console.WriteLine("The notifier corresponding to " + requestCode + " could not be found.");
+                ConsoleUtility.WriteLine("The notifier corresponding to " + requestCode + " could not be found.");
             }
         }
 

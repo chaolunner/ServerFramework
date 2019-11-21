@@ -1,6 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using ServerFramework.Model;
 using System;
+using Common;
 
 namespace ServerFramework.DAO
 {
@@ -36,7 +37,7 @@ namespace ServerFramework.DAO
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                ConsoleUtility.WriteLine(e, ConsoleColor.Red);
             }
             finally
             {
