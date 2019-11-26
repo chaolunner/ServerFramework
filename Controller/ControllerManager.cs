@@ -31,6 +31,7 @@ namespace ServerFramework.Controller
 
             LockstepController lockstepController = new LockstepController();
             lockstepController.Bind(RequestCode.Input, lockstepController.OnInput);
+            lockstepController.Bind(RequestCode.Timeline, lockstepController.OnTimeline);
             controllerDict.Add(lockstepController.GetType(), lockstepController);
 
             while (true)

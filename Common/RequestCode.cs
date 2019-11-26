@@ -12,5 +12,6 @@
         StartGame,
         Input,
         Lockstep,
+        Timeline,
     }
 }

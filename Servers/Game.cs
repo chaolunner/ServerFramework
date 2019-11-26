@@ -7,8 +7,8 @@ namespace ServerFramework.Servers
     class Game
     {
         private Room room;
-        private Dictionary<int, Dictionary<int, UserInputs>> inputDict;
-        private const string NextFailedError = "User Inputs Count [{0}] \n {1}";
+        private List<LockstepInputs> lockstepInputs;
+        private Dictionary<int, Dictionary<int, UserInputs>> userInputsDict;
 
         public int Count
         {
@@ -23,23 +23,24 @@ namespace ServerFramework.Servers
         public Game(Room room)
         {
             this.room = room;
-            inputDict = new Dictionary<int, Dictionary<int, UserInputs>>();
+            lockstepInputs = new List<LockstepInputs>();
+            userInputsDict = new Dictionary<int, Dictionary<int, UserInputs>>();
         }
 
         public void AddUserInputs(UserInputs userInputs)
         {
             try
             {
-                lock (inputDict)
+                lock (userInputsDict)
                 {
                     int tickId = TickId;
-                    if (!inputDict.ContainsKey(tickId))
+                    if (!userInputsDict.ContainsKey(tickId))
                     {
-                        inputDict.Add(tickId, new Dictionary<int, UserInputs>());
+                        userInputsDict.Add(tickId, new Dictionary<int, UserInputs>());
                     }
-                    if (!inputDict[tickId].ContainsKey(userInputs.UserId))
+                    if (!userInputsDict[tickId].ContainsKey(userInputs.UserId))
                     {
-                        inputDict[tickId].Add(userInputs.UserId, userInputs);
+                        userInputsDict[tickId].Add(userInputs.UserId, userInputs);
                     }
                 }
             }
@@ -49,25 +50,25 @@ namespace ServerFramework.Servers
             }
         }
 
-        public LockstepInputs Next()
+        public LockstepInputs Next(Fix64 deltaTime)
         {
             int tickId = TickId;
-            LockstepInputs lockstepInputs = new LockstepInputs();
-            lockstepInputs.TickId = tickId;
-            try
+            LockstepInputs inputs = new LockstepInputs();
+            inputs.TickId = tickId;
+            inputs.DeltaTime = deltaTime;
+            if (userInputsDict.ContainsKey(tickId) && userInputsDict[tickId].Count > 0)
             {
-                if (inputDict.ContainsKey(tickId) && inputDict[tickId].Count > 0)
-                {
-                    lockstepInputs.UserInputs = new UserInputs[inputDict[tickId].Count];
-                    inputDict[tickId].Values.CopyTo(lockstepInputs.UserInputs, 0);
-                }
+                inputs.UserInputs = new UserInputs[userInputsDict[tickId].Count];
+                userInputsDict[tickId].Values.CopyTo(inputs.UserInputs, 0);
             }
-            catch (Exception e)
-            {
-                ConsoleUtility.WriteLine(string.Format(NextFailedError, inputDict[tickId].Count, e), ConsoleColor.Red);
-            }
+            lockstepInputs.Add(inputs);
             TickId++;
-            return lockstepInputs;
+            return inputs;
+        }
+
+        public List<LockstepInputs> GetTimeline(int index)
+        {
+            return lockstepInputs.GetRange(index, lockstepInputs.Count - index);
         }
 
         public Client GetClient(int index)
