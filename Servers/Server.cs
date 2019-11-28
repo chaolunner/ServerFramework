@@ -11,8 +11,7 @@ namespace ServerFramework.Servers
     {
         void SetIpAndPort(string ipStr, int port);
         void Start();
-        void Publish(RequestCode requestCode, byte[] dataBytes, List<Client> excludeClients);
-        void Publish(RequestCode requestCode, string data, List<Client> excludeClients);
+        void Publish<T>(RequestCode requestCode, T data, List<Client> excludeClients);
         void Receive<T, R>(RequestCode requestCode, Func<Client, T, R> func);
         void Response(Client client, RequestCode requestCode, byte[] dataBytes);
     }
@@ -67,18 +66,13 @@ namespace ServerFramework.Servers
             }
         }
 
-        public void Publish(RequestCode requestCode, byte[] dataBytes, List<Client> excludeClients)
+        public void Publish<T>(RequestCode requestCode, T data, List<Client> excludeClients)
         {
             foreach (Client client in clientList)
             {
                 if (excludeClients.Contains(client)) { continue; }
-                client.Publish(requestCode, dataBytes);
+                client.Publish(requestCode, data);
             }
-        }
-
-        public void Publish(RequestCode requestCode, string data, List<Client> excludeClients)
-        {
-            Publish(requestCode, Encoding.UTF8.GetBytes(data), excludeClients);
         }
 
         public void Receive<T, R>(RequestCode requestCode, Func<Client, T, R> func)

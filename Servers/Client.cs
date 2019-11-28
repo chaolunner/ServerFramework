@@ -8,8 +8,7 @@ namespace ServerFramework.Servers
     public interface IClient
     {
         void Start();
-        void Publish(RequestCode requestCode, byte[] dataBytes);
-        void Publish(RequestCode requestCode, string data);
+        void Publish<T>(RequestCode requestCode, T data);
         void Response(RequestCode requestCode, byte[] dataBytes);
     }
 
@@ -83,20 +82,19 @@ namespace ServerFramework.Servers
             }
         }
 
-        public void Publish(RequestCode requsetCode, byte[] dataBytes)
+        public void Publish<T>(RequestCode requsetCode, T data)
         {
             if (clientSocket != null && clientSocket.Connected)
             {
-                byte[] bytes = Message.Pack(requsetCode, dataBytes);
-                clientSocket.Send(bytes);
-            }
-        }
-
-        public void Publish(RequestCode requsetCode, string data)
-        {
-            if (clientSocket != null && clientSocket.Connected)
-            {
-                byte[] bytes = Message.Pack(requsetCode, data);
+                byte[] bytes = null;
+                if (typeof(T) == typeof(byte[]))
+                {
+                    bytes = Message.Pack(requsetCode, data as byte[]);
+                }
+                else
+                {
+                    bytes = Message.Pack(requsetCode, data.ToString());
+                }
                 clientSocket.Send(bytes);
             }
         }
