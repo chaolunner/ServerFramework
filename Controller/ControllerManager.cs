@@ -14,24 +14,24 @@ namespace ServerFramework.Controller
         public void Start()
         {
             UserController userController = new UserController();
-            userController.Bind(RequestCode.Login, userController.OnLogin);
-            userController.Bind(RequestCode.Register, userController.OnRegister);
+            userController.Bind<string, string>(RequestCode.Login, userController.OnLogin);
+            userController.Bind<string, string>(RequestCode.Register, userController.OnRegister);
             controllerDict.Add(userController.GetType(), userController);
 
             RoomController roomController = new RoomController();
-            roomController.Bind(RequestCode.CreateRoom, roomController.OnCreateRoom);
-            roomController.Bind(RequestCode.ListRooms, roomController.OnListRoom);
-            roomController.Bind(RequestCode.JoinRoom, roomController.OnJoinRoom);
-            roomController.Bind(RequestCode.QuitRoom, roomController.OnQuitRoom);
+            roomController.Bind<string, string>(RequestCode.CreateRoom, roomController.OnCreateRoom);
+            roomController.Bind<string, string>(RequestCode.ListRooms, roomController.OnListRoom);
+            roomController.Bind<string, string>(RequestCode.JoinRoom, roomController.OnJoinRoom);
+            roomController.Bind<string, string>(RequestCode.QuitRoom, roomController.OnQuitRoom);
             controllerDict.Add(roomController.GetType(), roomController);
 
             GameController gameController = new GameController();
-            gameController.Bind(RequestCode.StartGame, gameController.OnStartGame);
+            gameController.Bind<string, string>(RequestCode.StartGame, gameController.OnStartGame);
             controllerDict.Add(gameController.GetType(), gameController);
 
             LockstepController lockstepController = new LockstepController();
-            lockstepController.Bind(RequestCode.Input, lockstepController.OnInput);
-            lockstepController.Bind(RequestCode.Timeline, lockstepController.OnTimeline);
+            lockstepController.Bind<byte[], string>(RequestCode.Input, lockstepController.OnInput);
+            lockstepController.Bind<string, string>(RequestCode.Timeline, lockstepController.OnTimeline);
             controllerDict.Add(lockstepController.GetType(), lockstepController);
 
             while (true)

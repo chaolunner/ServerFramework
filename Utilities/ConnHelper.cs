@@ -2,7 +2,7 @@
 using System;
 using Common;
 
-namespace ServerFramework.Tool
+namespace ServerFramework
 {
     class ConnHelper
     {

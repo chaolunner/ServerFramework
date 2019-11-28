@@ -10,7 +10,7 @@ namespace ServerFramework.Controller
         private DateTime currentTime;
         private Dictionary<Room, Game> gameDict = new Dictionary<Room, Game>();
 
-        public string OnInput(Client client, string data)
+        public string OnInput(Client client, byte[] dataBytes)
         {
             int userId = this.GetController<UserController>().GetUserId(client);
             Room room = this.GetController<RoomController>().GetRoomByUserId(userId);
@@ -22,7 +22,7 @@ namespace ServerFramework.Controller
                     gameDict.Add(room, new Game(room));
                 }
                 Game game = gameDict[room];
-                UserInputs userInputs = JsonUtility.FromJson<UserInputs>(data);
+                UserInputs userInputs = MessagePackUtility.Deserialize<UserInputs>(dataBytes);
                 userInputs.UserId = userId;
                 game.AddUserInputs(userInputs);
                 return ((int)ReturnCode.Success).ToString();
@@ -39,7 +39,7 @@ namespace ServerFramework.Controller
                 Game game = gameDict[room];
                 foreach (var lockstepInputs in game.GetTimeline(int.Parse(data)))
                 {
-                    client.Publish(RequestCode.Lockstep, JsonUtility.ToJson(lockstepInputs));
+                    client.Publish(RequestCode.Lockstep, MessagePackUtility.Serialize(lockstepInputs));
                 }
                 return ((int)ReturnCode.Success).ToString();
             }
@@ -55,8 +55,7 @@ namespace ServerFramework.Controller
                 Room room = kvp.Key;
                 Game game = kvp.Value;
                 LockstepInputs lockstepInputs = game.Next((Fix64)(DateTime.Now - currentTime).TotalSeconds);
-                string data = JsonUtility.ToJson(lockstepInputs);
-                room.Publish(RequestCode.Lockstep, data);
+                room.Publish(RequestCode.Lockstep, MessagePackUtility.Serialize(lockstepInputs));
             }
             currentTime = DateTime.Now;
         }

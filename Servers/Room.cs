@@ -31,11 +31,11 @@ namespace ServerFramework.Servers
             ClientList.Add(client);
         }
 
-        public void Publish(RequestCode requestCode, string data)
+        public void Publish(RequestCode requestCode, byte[] dataBytes)
         {
             foreach (Client client in ClientList)
             {
-                client.Publish(requestCode, data);
+                client.Publish(requestCode, dataBytes);
             }
         }
 

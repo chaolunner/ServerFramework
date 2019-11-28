@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net.Sockets;
+using System.Text;
 using System.Net;
 using System;
 using Common;
@@ -10,9 +11,10 @@ namespace ServerFramework.Servers
     {
         void SetIpAndPort(string ipStr, int port);
         void Start();
+        void Publish(RequestCode requestCode, byte[] dataBytes, List<Client> excludeClients);
         void Publish(RequestCode requestCode, string data, List<Client> excludeClients);
-        void Receive(RequestCode requestCode, Func<Client, string, string> action);
-        void Response(Client client, RequestCode requestCode, string data);
+        void Receive<T, R>(RequestCode requestCode, Func<Client, T, R> func);
+        void Response(Client client, RequestCode requestCode, byte[] dataBytes);
     }
 
     class Server : IServer, IDisposable
@@ -23,7 +25,7 @@ namespace ServerFramework.Servers
         private IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9663);
         private Socket serverSocket;
         private readonly List<Client> clientList = new List<Client>();
-        private readonly Dictionary<RequestCode, List<Func<Client, string, string>>> notifiers = new Dictionary<RequestCode, List<Func<Client, string, string>>>();
+        private readonly Dictionary<RequestCode, List<object>> notifiers = new Dictionary<RequestCode, List<object>>();
 
         public Server() { }
         public Server(string ipStr, int port)
@@ -65,37 +67,51 @@ namespace ServerFramework.Servers
             }
         }
 
-        public void Publish(RequestCode requestCode, string data, List<Client> excludeClients)
+        public void Publish(RequestCode requestCode, byte[] dataBytes, List<Client> excludeClients)
         {
             foreach (Client client in clientList)
             {
                 if (excludeClients.Contains(client)) { continue; }
-                client.Publish(requestCode, data);
+                client.Publish(requestCode, dataBytes);
             }
         }
 
-        public void Receive(RequestCode requestCode, Func<Client, string, string> func)
+        public void Publish(RequestCode requestCode, string data, List<Client> excludeClients)
+        {
+            Publish(requestCode, Encoding.UTF8.GetBytes(data), excludeClients);
+        }
+
+        public void Receive<T, R>(RequestCode requestCode, Func<Client, T, R> func)
         {
             if (!notifiers.ContainsKey(requestCode))
             {
-                notifiers.Add(requestCode, new List<Func<Client, string, string>>());
+                notifiers.Add(requestCode, new List<object>());
             }
             notifiers[requestCode].Add(func);
         }
 
-        public void Response(Client client, RequestCode requestCode, string data)
+        public void Response(Client client, RequestCode requestCode, byte[] dataBytes)
         {
             if (notifiers.ContainsKey(requestCode))
             {
                 foreach (var func in notifiers[requestCode])
                 {
-                    var result = func?.Invoke(client, data);
-                    if (result == null || string.IsNullOrEmpty(result))
+                    Type[] types = func.GetType().GetGenericArguments();
+                    if (types[1] == typeof(byte[]) && types[2] == types[1])
                     {
+                        client.Publish(requestCode, (func as Func<Client, byte[], byte[]>)?.Invoke(client, dataBytes));
                     }
-                    else
+                    else if (types[1] == typeof(string) && types[2] == typeof(byte[]))
                     {
-                        client.Publish(requestCode, result);
+                        client.Publish(requestCode, (func as Func<Client, string, byte[]>)?.Invoke(client, Encoding.UTF8.GetString(dataBytes)));
+                    }
+                    else if (types[1] == typeof(byte[]) && types[2] == typeof(string))
+                    {
+                        client.Publish(requestCode, (func as Func<Client, byte[], string>)?.Invoke(client, dataBytes));
+                    }
+                    else if (types[1] == typeof(string) && types[2] == types[1])
+                    {
+                        client.Publish(requestCode, (func as Func<Client, string, string>)?.Invoke(client, Encoding.UTF8.GetString(dataBytes)));
                     }
                 }
             }

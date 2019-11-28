@@ -1,5 +1,4 @@
 ﻿using MySql.Data.MySqlClient;
-using ServerFramework.Tool;
 using System.Net.Sockets;
 using System;
 using Common;
@@ -9,8 +8,9 @@ namespace ServerFramework.Servers
     public interface IClient
     {
         void Start();
+        void Publish(RequestCode requestCode, byte[] dataBytes);
         void Publish(RequestCode requestCode, string data);
-        void Response(RequestCode requestCode, string data);
+        void Response(RequestCode requestCode, byte[] dataBytes);
     }
 
     public class Client : IClient
@@ -19,7 +19,7 @@ namespace ServerFramework.Servers
         private Message msg = new Message();
         private MySqlConnection mySqlConn;
 
-        public delegate void RequestHandler(Client client, RequestCode requestCode, string data);
+        public delegate void RequestHandler(Client client, RequestCode requestCode, byte[] dataBytes);
         public delegate void EndHandler(Client client);
         public event RequestHandler OnResponse;
         public event EndHandler OnEnd;
@@ -66,9 +66,9 @@ namespace ServerFramework.Servers
             }
         }
 
-        public void Response(RequestCode requestCode, string data)
+        public void Response(RequestCode requestCode, byte[] dataBytes)
         {
-            OnResponse?.Invoke(this, requestCode, data);
+            OnResponse?.Invoke(this, requestCode, dataBytes);
         }
 
         private void End()
@@ -80,6 +80,15 @@ namespace ServerFramework.Servers
                 clientSocket.Close();
                 clientSocket = null;
                 OnEnd?.Invoke(this);
+            }
+        }
+
+        public void Publish(RequestCode requsetCode, byte[] dataBytes)
+        {
+            if (clientSocket != null && clientSocket.Connected)
+            {
+                byte[] bytes = Message.Pack(requsetCode, dataBytes);
+                clientSocket.Send(bytes);
             }
         }
 
