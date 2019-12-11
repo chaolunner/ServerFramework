@@ -112,7 +112,15 @@
     <Compile Include="Servers\Client.cs" />
     <Compile Include="Servers\Room.cs" />
     <Compile Include="Servers\Server.cs" />
+    <Compile Include="Tests\Lockstep\LockstepTestCaseData.cs" />
+    <Compile Include="Tests\Lockstep\LockstepTestCaseDataHelper.cs" />
+    <Compile Include="Tests\Lockstep\LockstepTester.cs" />
+    <Compile Include="Tests\Lockstep\LockstepCase.cs" />
+    <Compile Include="Tests\TestCase.cs" />
+    <Compile Include="Tests\TestCaseData.cs" />
+    <Compile Include="Tests\TestManager.cs" />
     <Compile Include="Utilities\ConnHelper.cs" />
+    <Compile Include="Tests\Tester.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

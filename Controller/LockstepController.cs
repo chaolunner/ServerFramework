@@ -54,14 +54,31 @@ namespace ServerFramework.Controller
             {
                 Room room = kvp.Key;
                 Game game = kvp.Value;
-                LockstepInputs lockstepInputs = game.Next((Fix64)(DateTime.Now - currentTime).TotalSeconds);
-                room.Publish(RequestCode.Lockstep, MessagePackUtility.Serialize(lockstepInputs));
+                LockstepInputs lockstepInputs = game.MoveNext((Fix64)(DateTime.Now - currentTime).TotalSeconds);
+
+                LockstepTester lockstepTester = TestManager.Default.Get<LockstepTester>();
+                if (lockstepTester != null)
+                {
+                    if (lockstepTester.Simulate(ref lockstepInputs))
+                    {
+                        room.Publish(RequestCode.Lockstep, MessagePackUtility.Serialize(lockstepInputs));
+                    }
+                }
+                else
+                {
+                    room.Publish(RequestCode.Lockstep, MessagePackUtility.Serialize(lockstepInputs));
+                }
             }
             currentTime = DateTime.Now;
         }
 
         private void RemoveRoom(Room room, Client client)
         {
+            LockstepTester lockstepTester = TestManager.Default.Get<LockstepTester>();
+            if (lockstepTester != null)
+            {
+                lockstepTester.Restart();
+            }
             if (gameDict.ContainsKey(room))
             {
                 gameDict.Remove(room);

@@ -50,7 +50,7 @@ namespace ServerFramework.Servers
             }
         }
 
-        public LockstepInputs Next(Fix64 deltaTime)
+        public LockstepInputs MoveNext(Fix64 deltaTime)
         {
             int tickId = TickId;
             LockstepInputs inputs = new LockstepInputs();
