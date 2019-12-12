@@ -12,9 +12,9 @@ namespace ServerFramework
         public TestManager()
         {
             var lockstepTester = Create<LockstepTester>();
+            lockstepTester.AddTestCase(new LockstepCase1(times: 500));
+            lockstepTester.AddTestCase(new LockstepCase1(loop: false, nextSecond: 10, vertical: 1));
             lockstepTester.AddTestCase(new LockstepCase1());
-            lockstepTester.AddTestCase(new LockstepCase2());
-            lockstepTester.AddTestCase(new LockstepCase3());
         }
 
         public T Create<T>(params ITestCase[] testCases) where T : ITester

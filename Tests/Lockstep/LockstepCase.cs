@@ -2,36 +2,13 @@
 {
     public class LockstepCase1 : TestCase<LockstepTestCaseData>
     {
-        public LockstepCase1()
+        public LockstepCase1(bool loop = true, int times = 0, float nextSecond = 0.02f, int userId = 1, float vertical = 0, float horizontal = 0, bool jump = false)
         {
-            isLoop = true;
-            loopTimes = 500;
+            isLoop = loop;
+            loopTimes = times;
             testCaseData = new LockstepTestCaseData[]
             {
-                LockstepTestCaseDataHelper.NewLockstepTestCaseData(),
-            };
-        }
-    }
-
-    public class LockstepCase2 : TestCase<LockstepTestCaseData>
-    {
-        public LockstepCase2()
-        {
-            testCaseData = new LockstepTestCaseData[]
-            {
-                LockstepTestCaseDataHelper.NewLockstepTestCaseData(10f, 1, 1),
-            };
-        }
-    }
-
-    public class LockstepCase3 : TestCase<LockstepTestCaseData>
-    {
-        public LockstepCase3()
-        {
-            isLoop = true;
-            testCaseData = new LockstepTestCaseData[]
-            {
-                LockstepTestCaseDataHelper.NewLockstepTestCaseData(),
+                LockstepTestCaseDataHelper.NewLockstepTestCaseData(nextSecond, userId, vertical, horizontal, jump),
             };
         }
     }

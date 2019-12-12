@@ -22,7 +22,6 @@ namespace ServerFramework
                 time = Current.NextSecond;
                 lockstepInputs.TickId = tickId;
                 lockstepInputs.UserInputs = new UserInputs[] { Current.UserInputs };
-                ConsoleUtility.WriteLine(MessagePackUtility.ToJson(MessagePackUtility.Serialize(lockstepInputs)));
                 tickId++;
                 return true;
             }
