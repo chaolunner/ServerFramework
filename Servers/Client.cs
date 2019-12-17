@@ -1,6 +1,5 @@
 ﻿using MySql.Data.MySqlClient;
 using System.Net.Sockets;
-using System;
 using Common;
 
 namespace ServerFramework.Servers
@@ -14,7 +13,7 @@ namespace ServerFramework.Servers
 
     public class Client : IClient
     {
-        private Socket clientSocket;
+        private ISession session;
         private Message msg = new Message();
         private MySqlConnection mySqlConn;
 
@@ -34,34 +33,25 @@ namespace ServerFramework.Servers
         public Client() { }
         public Client(Socket clientSocket)
         {
-            this.clientSocket = clientSocket;
+            session = new TcpSession(clientSocket, new AsyncReceive(msg, ReceiveCallback));
+            //session = new KcpSession(clientSocket, new AsyncReceive(msg, ReceiveCallback));
             mySqlConn = ConnHelper.Connect();
         }
 
         public void Start()
         {
-            clientSocket.BeginReceive(msg.Data, msg.StartIndex, msg.RemainSize, SocketFlags.None, ReceiveCallback, null);
+            session.Receive();
         }
 
-        private void ReceiveCallback(IAsyncResult ar)
+        private void ReceiveCallback(int count)
         {
-            try
+            if (count == 0)
             {
-                int count = clientSocket.EndReceive(ar);
-                if (count == 0)
-                {
-                    End();
-                }
-                else
-                {
-                    msg.Process(count, Response);
-                    Start();
-                }
-            }
-            catch (Exception e)
-            {
-                ConsoleUtility.WriteLine(e, ConsoleColor.Red);
                 End();
+            }
+            else
+            {
+                msg.Process(count, Response);
             }
         }
 
@@ -72,19 +62,19 @@ namespace ServerFramework.Servers
 
         private void End()
         {
-            if (clientSocket != null)
+            if (session != null)
             {
                 ConnHelper.Disconnect(mySqlConn);
                 mySqlConn = null;
-                clientSocket.Close();
-                clientSocket = null;
+                session.Close();
+                session = null;
                 OnEnd?.Invoke(this);
             }
         }
 
         public void Publish<T>(RequestCode requsetCode, T data)
         {
-            if (clientSocket != null && clientSocket.Connected)
+            if (session != null)
             {
                 byte[] bytes = null;
                 if (typeof(T) == typeof(byte[]))
@@ -95,7 +85,7 @@ namespace ServerFramework.Servers
                 {
                     bytes = Message.Pack(requsetCode, data.ToString());
                 }
-                clientSocket.Send(bytes);
+                session.Send(bytes);
             }
         }
     }

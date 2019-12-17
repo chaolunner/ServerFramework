@@ -42,6 +42,9 @@
     <Reference Include="Google.Protobuf, Version=3.6.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
       <HintPath>packages\Google.Protobuf.3.6.1\lib\net45\Google.Protobuf.dll</HintPath>
     </Reference>
+    <Reference Include="Kcp, Version=2.0.0.0, Culture=neutral, PublicKeyToken=2d0c34c87ea71ac5, processorArchitecture=MSIL">
+      <HintPath>packages\Kcp.2.0.0\lib\netstandard2.0\Kcp.dll</HintPath>
+    </Reference>
     <Reference Include="MessagePack, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b4a0369545f0a1be, processorArchitecture=MSIL">
       <HintPath>packages\MessagePack.2.0.299-rc\lib\netstandard2.0\MessagePack.dll</HintPath>
     </Reference>
@@ -119,6 +122,7 @@
     <Compile Include="Tests\TestCase.cs" />
     <Compile Include="Tests\TestCaseData.cs" />
     <Compile Include="Tests\TestManager.cs" />
+    <Compile Include="Utilities\ConfigUtility.cs" />
     <Compile Include="Utilities\ConnHelper.cs" />
     <Compile Include="Tests\Tester.cs" />
   </ItemGroup>
