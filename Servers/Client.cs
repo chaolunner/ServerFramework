@@ -34,7 +34,6 @@ namespace ServerFramework.Servers
         public Client(Socket clientSocket)
         {
             session = new TcpSession(clientSocket, new AsyncReceive(msg, ReceiveCallback));
-            //session = new KcpSession(clientSocket, new AsyncReceive(msg, ReceiveCallback));
             mySqlConn = ConnHelper.Connect();
         }
 
@@ -74,7 +73,7 @@ namespace ServerFramework.Servers
 
         public void Publish<T>(RequestCode requsetCode, T data)
         {
-            if (session != null)
+            if (session.IsConnected)
             {
                 byte[] bytes = null;
                 if (typeof(T) == typeof(byte[]))
