@@ -39,7 +39,10 @@ namespace ServerFramework.Servers
 
         public void Start()
         {
-            session.Receive();
+            if (session != null)
+            {
+                session.Receive();
+            }
         }
 
         private void ReceiveCallback(int count)
@@ -73,7 +76,7 @@ namespace ServerFramework.Servers
 
         public void Publish<T>(RequestCode requsetCode, T data)
         {
-            if (session.IsConnected)
+            if (session != null && session.IsConnected)
             {
                 byte[] bytes = null;
                 if (typeof(T) == typeof(byte[]))
