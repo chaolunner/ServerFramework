@@ -73,16 +73,19 @@ namespace ServerFramework.Servers
                 if (count > 0 && !clientDict.ContainsKey(remoteEP))
                 {
                     Client client = new Client(serverSocket, remoteEP);
-                    OnAsyncReceive += client.OnAsyncReceive;
                     AddClient(client);
                 }
                 OnAsyncReceive?.Invoke(remoteEP, udpAsyncReceive, count);
-                serverSocket.BeginReceiveFrom(udpAsyncReceive.Buffer, udpAsyncReceive.Offset, udpAsyncReceive.Size, SocketFlags.None, ref remoteEP, ReceiveFromCallback, null);
             }
             catch (Exception e)
             {
                 OnAsyncReceive?.Invoke(remoteEP, udpAsyncReceive, 0);
                 ConsoleUtility.WriteLine(e);
+            }
+            finally
+            {
+                remoteEP = new IPEndPoint(IPAddress.Any, 0);
+                serverSocket.BeginReceiveFrom(udpAsyncReceive.Buffer, udpAsyncReceive.Offset, udpAsyncReceive.Size, SocketFlags.None, ref remoteEP, ReceiveFromCallback, null);
             }
         }
 
