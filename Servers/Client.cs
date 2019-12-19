@@ -1,20 +1,23 @@
 ﻿using MySql.Data.MySqlClient;
 using System.Net.Sockets;
+using System.Net;
 using Common;
 
 namespace ServerFramework.Servers
 {
     public interface IClient
     {
-        void Start();
         void Publish<T>(RequestCode requestCode, T data);
         void Response(RequestCode requestCode, byte[] dataBytes);
     }
 
     public class Client : IClient
     {
+        public EndPoint RemoteEndPoint;
+
         private ISession session;
         private Message msg = new Message();
+        private MessageAsyncReceive messageAsyncReceive;
         private MySqlConnection mySqlConn;
 
         public delegate void RequestHandler(Client client, RequestCode requestCode, byte[] dataBytes);
@@ -30,19 +33,22 @@ namespace ServerFramework.Servers
             }
         }
 
-        public Client() { }
-        public Client(Socket clientSocket)
+        public Client(Socket serverSocket, EndPoint remoteEP)
         {
-            session = new TcpSession(clientSocket, new AsyncReceive(msg, ReceiveCallback));
+            RemoteEndPoint = remoteEP;
+            messageAsyncReceive = new MessageAsyncReceive(msg);
+            messageAsyncReceive.BeginReceive(ReceiveCallback);
+            session = new KcpSession(serverSocket, messageAsyncReceive, remoteEP);
             mySqlConn = ConnHelper.Connect();
         }
 
-        public void Start()
+        public Client(Socket clientSocket)
         {
-            if (session != null)
-            {
-                session.Receive();
-            }
+            RemoteEndPoint = clientSocket.RemoteEndPoint;
+            messageAsyncReceive = new MessageAsyncReceive(msg);
+            messageAsyncReceive.BeginReceive(ReceiveCallback);
+            session = new TcpSession(clientSocket, messageAsyncReceive);
+            mySqlConn = ConnHelper.Connect();
         }
 
         private void ReceiveCallback(int count)
@@ -66,10 +72,10 @@ namespace ServerFramework.Servers
         {
             if (session != null)
             {
-                ConnHelper.Disconnect(mySqlConn);
-                mySqlConn = null;
                 session.Close();
                 session = null;
+                ConnHelper.Disconnect(mySqlConn);
+                mySqlConn = null;
                 OnEnd?.Invoke(this);
             }
         }
@@ -88,6 +94,14 @@ namespace ServerFramework.Servers
                     bytes = Message.Pack(requsetCode, data.ToString());
                 }
                 session.Send(bytes);
+            }
+        }
+
+        public void OnAsyncReceive(EndPoint remoteEP, IAsyncReceive asyncReceive)
+        {
+            if (RemoteEndPoint == remoteEP)
+            {
+                session.Receive(asyncReceive);
             }
         }
     }

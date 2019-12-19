@@ -9,7 +9,6 @@ namespace ServerFramework.Servers
 {
     public interface IServer
     {
-        void SetIpAndPort(string ipStr, int port);
         void Start();
         void Publish<T>(RequestCode requestCode, T data, List<Client> excludeClients);
         void Receive<T, R>(RequestCode requestCode, Func<Client, T, R> func);
@@ -21,54 +20,86 @@ namespace ServerFramework.Servers
         public static readonly IServer Default = new Server();
 
         private bool isDisposed = false;
-        private IPEndPoint ipEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9663);
+        private IPEndPoint ipEndPoint;
+        private EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
+        private AsyncReceive udpAsyncReceive = new AsyncReceive();
         private Socket serverSocket;
-        private readonly List<Client> clientList = new List<Client>();
+        private event Action<EndPoint, IAsyncReceive> OnAsyncReceive;
+        private readonly Dictionary<EndPoint, Client> clientDict = new Dictionary<EndPoint, Client>();
         private readonly Dictionary<RequestCode, List<object>> notifiers = new Dictionary<RequestCode, List<object>>();
 
-        public Server() { }
-        public Server(string ipStr, int port)
-        {
-            SetIpAndPort(ipStr, port);
-        }
+        private const string IP = "ip";
+        private const string PORT = "port";
+        private const string MODE = "mode";
+        private const string TCP = "Tcp";
+        private const string UDP = "Udp";
 
-        public void SetIpAndPort(string ipStr, int port)
+        public Server()
         {
-            ipEndPoint = new IPEndPoint(IPAddress.Parse(ipStr), port);
+            ipEndPoint = new IPEndPoint(IPAddress.Parse(ConfigUtility.GetAppConfig(IP)), int.Parse(ConfigUtility.GetAppConfig(PORT)));
         }
 
         public void Start()
         {
-            serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            serverSocket.Bind(ipEndPoint);
-            serverSocket.Listen(0);
-            serverSocket.BeginAccept(AcceptCallback, null);
+            string mode = ConfigUtility.GetAppConfig(MODE);
+            if (mode == TCP)
+            {
+                serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                serverSocket.Bind(ipEndPoint);
+                serverSocket.Listen(0);
+                serverSocket.BeginAccept(AcceptCallback, null);
+            }
+            else if (mode == UDP)
+            {
+                serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                serverSocket.Bind(ipEndPoint);
+                serverSocket.BeginReceiveFrom(udpAsyncReceive.Buffer, udpAsyncReceive.Offset, udpAsyncReceive.Size, SocketFlags.None, ref remoteEP, ReceiveFromCallback, null);
+            }
         }
 
         private void AcceptCallback(IAsyncResult ar)
         {
             Socket clientSocket = serverSocket.EndAccept(ar);
             Client client = new Client(clientSocket);
+            AddClient(client);
+            serverSocket.BeginAccept(AcceptCallback, null);
+        }
+
+        private void ReceiveFromCallback(IAsyncResult ar)
+        {
+            int count = serverSocket.EndReceiveFrom(ar, ref remoteEP);
+            if (count > 0 && !clientDict.ContainsKey(remoteEP))
+            {
+                Client client = new Client(serverSocket, remoteEP);
+                OnAsyncReceive += client.OnAsyncReceive;
+                AddClient(client);
+            }
+            OnAsyncReceive?.Invoke(remoteEP, udpAsyncReceive);
+            serverSocket.BeginReceiveFrom(udpAsyncReceive.Buffer, udpAsyncReceive.Offset, udpAsyncReceive.Size, SocketFlags.None, ref remoteEP, ReceiveFromCallback, null);
+        }
+
+        private void AddClient(Client client)
+        {
             client.OnResponse += Response;
             client.OnEnd += RemoveClient;
-            client.Start();
-            clientList.Add(client);
-            serverSocket.BeginAccept(AcceptCallback, null);
+            OnAsyncReceive += client.OnAsyncReceive;
+            clientDict.Add(client.RemoteEndPoint, client);
         }
 
         private void RemoveClient(Client client)
         {
-            lock (clientList)
+            lock (clientDict)
             {
                 client.OnResponse -= Response;
                 client.OnEnd -= RemoveClient;
-                clientList.Remove(client);
+                OnAsyncReceive -= client.OnAsyncReceive;
+                clientDict.Remove(client.RemoteEndPoint);
             }
         }
 
         public void Publish<T>(RequestCode requestCode, T data, List<Client> excludeClients)
         {
-            foreach (Client client in clientList)
+            foreach (Client client in clientDict.Values)
             {
                 if (excludeClients.Contains(client)) { continue; }
                 client.Publish(requestCode, data);
