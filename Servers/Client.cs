@@ -99,7 +99,7 @@ namespace ServerFramework.Servers
 
         public void OnAsyncReceive(EndPoint remoteEP, IAsyncReceive asyncReceive)
         {
-            if (RemoteEndPoint == remoteEP)
+            if (RemoteEndPoint.Equals(remoteEP))
             {
                 session.Receive(asyncReceive);
             }

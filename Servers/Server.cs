@@ -67,15 +67,22 @@ namespace ServerFramework.Servers
 
         private void ReceiveFromCallback(IAsyncResult ar)
         {
-            int count = serverSocket.EndReceiveFrom(ar, ref remoteEP);
-            if (count > 0 && !clientDict.ContainsKey(remoteEP))
+            try
             {
-                Client client = new Client(serverSocket, remoteEP);
-                OnAsyncReceive += client.OnAsyncReceive;
-                AddClient(client);
+                int count = serverSocket.EndReceiveFrom(ar, ref remoteEP);
+                if (count > 0 && !clientDict.ContainsKey(remoteEP))
+                {
+                    Client client = new Client(serverSocket, remoteEP);
+                    OnAsyncReceive += client.OnAsyncReceive;
+                    AddClient(client);
+                }
+                OnAsyncReceive?.Invoke(remoteEP, udpAsyncReceive);
+                serverSocket.BeginReceiveFrom(udpAsyncReceive.Buffer, udpAsyncReceive.Offset, udpAsyncReceive.Size, SocketFlags.None, ref remoteEP, ReceiveFromCallback, null);
             }
-            OnAsyncReceive?.Invoke(remoteEP, udpAsyncReceive);
-            serverSocket.BeginReceiveFrom(udpAsyncReceive.Buffer, udpAsyncReceive.Offset, udpAsyncReceive.Size, SocketFlags.None, ref remoteEP, ReceiveFromCallback, null);
+            catch
+            {
+                OnAsyncReceive?.Invoke(remoteEP, null);
+            }
         }
 
         private void AddClient(Client client)
