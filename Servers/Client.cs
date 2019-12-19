@@ -97,11 +97,15 @@ namespace ServerFramework.Servers
             }
         }
 
-        public void OnAsyncReceive(EndPoint remoteEP, IAsyncReceive asyncReceive)
+        public void OnAsyncReceive(EndPoint remoteEP, IAsyncReceive asyncReceive, int count)
         {
-            if (RemoteEndPoint.Equals(remoteEP))
+            if (count == 0)
             {
-                session.Receive(asyncReceive);
+                End();
+            }
+            else if (RemoteEndPoint.Equals(remoteEP))
+            {
+                session.Receive(asyncReceive, count);
             }
         }
     }

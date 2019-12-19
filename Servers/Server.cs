@@ -22,9 +22,9 @@ namespace ServerFramework.Servers
         private bool isDisposed = false;
         private IPEndPoint ipEndPoint;
         private EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
-        private AsyncReceive udpAsyncReceive = new AsyncReceive();
+        private IAsyncReceive udpAsyncReceive = new AsyncReceive();
         private Socket serverSocket;
-        private event Action<EndPoint, IAsyncReceive> OnAsyncReceive;
+        private event Action<EndPoint, IAsyncReceive, int> OnAsyncReceive;
         private readonly Dictionary<EndPoint, Client> clientDict = new Dictionary<EndPoint, Client>();
         private readonly Dictionary<RequestCode, List<object>> notifiers = new Dictionary<RequestCode, List<object>>();
 
@@ -76,12 +76,13 @@ namespace ServerFramework.Servers
                     OnAsyncReceive += client.OnAsyncReceive;
                     AddClient(client);
                 }
-                OnAsyncReceive?.Invoke(remoteEP, udpAsyncReceive);
+                OnAsyncReceive?.Invoke(remoteEP, udpAsyncReceive, count);
                 serverSocket.BeginReceiveFrom(udpAsyncReceive.Buffer, udpAsyncReceive.Offset, udpAsyncReceive.Size, SocketFlags.None, ref remoteEP, ReceiveFromCallback, null);
             }
-            catch
+            catch (Exception e)
             {
-                OnAsyncReceive?.Invoke(remoteEP, null);
+                OnAsyncReceive?.Invoke(remoteEP, udpAsyncReceive, 0);
+                ConsoleUtility.WriteLine(e);
             }
         }
 
