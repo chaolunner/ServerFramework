@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net.Sockets;
+using System.Threading;
 using System.Text;
 using System.Net;
 using System;
@@ -24,6 +25,7 @@ namespace ServerFramework.Servers
         private EndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
         private IAsyncReceive udpAsyncReceive = new AsyncReceive();
         private Socket serverSocket;
+        private Thread thread;
         private event Action<EndPoint, IAsyncReceive, int> OnAsyncReceive;
         private readonly Dictionary<EndPoint, Client> clientDict = new Dictionary<EndPoint, Client>();
         private readonly Dictionary<RequestCode, List<object>> notifiers = new Dictionary<RequestCode, List<object>>();
@@ -53,7 +55,8 @@ namespace ServerFramework.Servers
             {
                 serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                 serverSocket.Bind(ipEndPoint);
-                serverSocket.BeginReceiveFrom(udpAsyncReceive.Buffer, udpAsyncReceive.Offset, udpAsyncReceive.Size, SocketFlags.None, ref remoteEP, ReceiveFromCallback, null);
+                thread = new Thread(ReceiveFromUdp);
+                thread.Start();
             }
         }
 
@@ -65,27 +68,21 @@ namespace ServerFramework.Servers
             serverSocket.BeginAccept(AcceptCallback, null);
         }
 
-        private void ReceiveFromCallback(IAsyncResult ar)
+        private void ReceiveFromUdp()
         {
-            try
+            while (true)
             {
-                int count = serverSocket.EndReceiveFrom(ar, ref remoteEP);
-                if (count > 0 && !clientDict.ContainsKey(remoteEP))
+                try
                 {
-                    Client client = new Client(serverSocket, remoteEP);
-                    AddClient(client);
+                    int count = serverSocket.ReceiveFrom(udpAsyncReceive.Buffer, udpAsyncReceive.Offset, udpAsyncReceive.Size, SocketFlags.None, ref remoteEP);
+                    if (count > 0 && !clientDict.ContainsKey(remoteEP))
+                    {
+                        Client client = new Client(serverSocket, remoteEP);
+                        AddClient(client);
+                    }
+                    OnAsyncReceive?.Invoke(remoteEP, udpAsyncReceive, count);
                 }
-                OnAsyncReceive?.Invoke(remoteEP, udpAsyncReceive, count);
-            }
-            catch (Exception e)
-            {
-                OnAsyncReceive?.Invoke(remoteEP, udpAsyncReceive, 0);
-                ConsoleUtility.WriteLine(e);
-            }
-            finally
-            {
-                remoteEP = new IPEndPoint(IPAddress.Any, 0);
-                serverSocket.BeginReceiveFrom(udpAsyncReceive.Buffer, udpAsyncReceive.Offset, udpAsyncReceive.Size, SocketFlags.None, ref remoteEP, ReceiveFromCallback, null);
+                catch { }
             }
         }
 

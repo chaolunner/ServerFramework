@@ -1,6 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using System.Net.Sockets;
 using System.Net;
+using System;
 using Common;
 
 namespace ServerFramework.Servers
@@ -40,6 +41,7 @@ namespace ServerFramework.Servers
             messageAsyncReceive.BeginReceive(ReceiveCallback);
             session = new KcpSession(serverSocket, messageAsyncReceive, remoteEP);
             mySqlConn = ConnHelper.Connect();
+            ConsoleUtility.WriteLine("Connect: " + RemoteEndPoint.ToString(), ConsoleColor.Green);
         }
 
         public Client(Socket clientSocket)
@@ -77,6 +79,7 @@ namespace ServerFramework.Servers
                 ConnHelper.Disconnect(mySqlConn);
                 mySqlConn = null;
                 OnEnd?.Invoke(this);
+                ConsoleUtility.WriteLine("Disconnect: " + RemoteEndPoint.ToString(), ConsoleColor.Red);
             }
         }
 
@@ -99,13 +102,16 @@ namespace ServerFramework.Servers
 
         public void OnAsyncReceive(EndPoint remoteEP, IAsyncReceive asyncReceive, int count)
         {
-            if (count == 0)
+            if (RemoteEndPoint.Equals(remoteEP))
             {
-                End();
-            }
-            else if (RemoteEndPoint.Equals(remoteEP))
-            {
-                session.Receive(asyncReceive, count);
+                if (count == 0)
+                {
+                    End();
+                }
+                else
+                {
+                    session.Receive(asyncReceive, count);
+                }
             }
         }
     }
