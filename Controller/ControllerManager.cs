@@ -25,10 +25,6 @@ namespace ServerFramework.Controller
             roomController.Bind<string, string>(RequestCode.QuitRoom, roomController.OnQuitRoom);
             controllerDict.Add(roomController.GetType(), roomController);
 
-            GameController gameController = new GameController();
-            gameController.Bind<string, string>(RequestCode.StartGame, gameController.OnStartGame);
-            controllerDict.Add(gameController.GetType(), gameController);
-
             LockstepController lockstepController = new LockstepController();
             lockstepController.Bind<byte[], string>(RequestCode.Input, lockstepController.OnInput);
             lockstepController.Bind<string, string>(RequestCode.Timeline, lockstepController.OnTimeline);

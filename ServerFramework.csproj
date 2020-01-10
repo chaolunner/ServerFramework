@@ -99,7 +99,6 @@
   <ItemGroup>
     <Compile Include="Controller\BaseController.cs" />
     <Compile Include="Controller\ControllerManager.cs" />
-    <Compile Include="Controller\GameController.cs" />
     <Compile Include="Controller\IController.cs" />
     <Compile Include="Controller\LockstepController.cs" />
     <Compile Include="Controller\RoomController.cs" />
