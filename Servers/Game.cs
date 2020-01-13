@@ -42,6 +42,16 @@ namespace ServerFramework.Servers
                     {
                         userInputsDict[tickId].Add(userInputs.UserId, userInputs);
                     }
+                    else
+                    {
+                        var tempUserInputs = userInputsDict[tickId][userInputs.UserId];
+                        var inputData = new byte[tempUserInputs.InputData.Length + userInputs.InputData.Length][];
+
+                        tempUserInputs.InputData.CopyTo(inputData, 0);
+                        userInputs.InputData.CopyTo(inputData, tempUserInputs.InputData.Length);
+                        tempUserInputs.InputData = inputData;
+                        userInputsDict[tickId][userInputs.UserId] = tempUserInputs;
+                    }
                 }
             }
             catch (Exception e)
