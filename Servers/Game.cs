@@ -64,18 +64,17 @@ namespace ServerFramework.Servers
                 for (int i = 0; i < userInputsDict[tickId].Count; i++)
                 {
                     var userInputs = userInputsDict[tickId][i];
-                    var number = userInputs.Number;
                     var userId = userInputs.UserId;
 
                     if (!inputsDict.ContainsKey(userId))
                     {
                         inputsDict.Add(userId, new Dictionary<int, List<UserInputs>>());
                     }
-                    if (!inputsDict[userId].ContainsKey(number))
+                    if (!inputsDict[userId].ContainsKey(userInputs.Index))
                     {
-                        inputsDict[userId].Add(number, new List<UserInputs>());
+                        inputsDict[userId].Add(userInputs.Index, new List<UserInputs>());
                     }
-                    inputsDict[userId][number].Add(userInputs);
+                    inputsDict[userId][userInputs.Index].Add(userInputs);
                 }
             }
 
