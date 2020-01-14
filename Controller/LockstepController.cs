@@ -54,11 +54,11 @@ namespace ServerFramework.Controller
             {
                 Room room = kvp.Key;
                 Game game = kvp.Value;
-                LockstepInputs lockstepInputs = game.MoveNext((Fix64)(DateTime.Now - currentTime).TotalSeconds);
 
                 LockstepTester lockstepTester = TestManager.Default.Get<LockstepTester>();
                 if (lockstepTester != null)
                 {
+                    var lockstepInputs = new LockstepInputs();
                     if (lockstepTester.Simulate(ref lockstepInputs))
                     {
                         room.Publish(RequestCode.Lockstep, MessagePackUtility.Serialize(lockstepInputs));
@@ -66,6 +66,7 @@ namespace ServerFramework.Controller
                 }
                 else
                 {
+                    var lockstepInputs = game.MoveNext((Fix64)(DateTime.Now - currentTime).TotalSeconds);
                     room.Publish(RequestCode.Lockstep, MessagePackUtility.Serialize(lockstepInputs));
                 }
             }

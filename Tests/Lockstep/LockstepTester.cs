@@ -21,7 +21,7 @@ namespace ServerFramework
             {
                 time = Current.NextSecond;
                 lockstepInputs.TickId = tickId;
-                lockstepInputs.UserInputs = new UserInputs[] { Current.UserInputs };
+                lockstepInputs.UserInputs = new UserInputs[1][] { new UserInputs[] { Current.UserInputs } };
                 tickId++;
                 return true;
             }

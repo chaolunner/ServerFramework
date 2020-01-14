@@ -8,7 +8,7 @@ namespace ServerFramework.Servers
     {
         private Room room;
         private List<LockstepInputs> lockstepInputs;
-        private Dictionary<int, Dictionary<int, UserInputs>> userInputsDict;
+        private Dictionary<int, List<UserInputs>> userInputsDict;
 
         public int Count
         {
@@ -24,7 +24,7 @@ namespace ServerFramework.Servers
         {
             this.room = room;
             lockstepInputs = new List<LockstepInputs>();
-            userInputsDict = new Dictionary<int, Dictionary<int, UserInputs>>();
+            userInputsDict = new Dictionary<int, List<UserInputs>>();
         }
 
         public void AddUserInputs(UserInputs userInputs)
@@ -34,23 +34,13 @@ namespace ServerFramework.Servers
                 lock (userInputsDict)
                 {
                     int tickId = TickId;
-                    if (!userInputsDict.ContainsKey(tickId))
+                    if (tickId - userInputs.TickId < 5)
                     {
-                        userInputsDict.Add(tickId, new Dictionary<int, UserInputs>());
-                    }
-                    if (!userInputsDict[tickId].ContainsKey(userInputs.UserId))
-                    {
-                        userInputsDict[tickId].Add(userInputs.UserId, userInputs);
-                    }
-                    else
-                    {
-                        var tempUserInputs = userInputsDict[tickId][userInputs.UserId];
-                        var inputData = new byte[tempUserInputs.InputData.Length + userInputs.InputData.Length][];
-
-                        tempUserInputs.InputData.CopyTo(inputData, 0);
-                        userInputs.InputData.CopyTo(inputData, tempUserInputs.InputData.Length);
-                        tempUserInputs.InputData = inputData;
-                        userInputsDict[tickId][userInputs.UserId] = tempUserInputs;
+                        if (!userInputsDict.ContainsKey(tickId))
+                        {
+                            userInputsDict.Add(tickId, new List<UserInputs>());
+                        }
+                        userInputsDict[tickId].Add(userInputs);
                     }
                 }
             }
@@ -63,14 +53,62 @@ namespace ServerFramework.Servers
         public LockstepInputs MoveNext(Fix64 deltaTime)
         {
             int tickId = TickId;
-            LockstepInputs inputs = new LockstepInputs();
+            var inputs = new LockstepInputs();
+            var inputsDict = new Dictionary<int, Dictionary<int, List<UserInputs>>>();
+
             inputs.TickId = tickId;
             inputs.DeltaTime = deltaTime;
+
             if (userInputsDict.ContainsKey(tickId) && userInputsDict[tickId].Count > 0)
             {
-                inputs.UserInputs = new UserInputs[userInputsDict[tickId].Count];
-                userInputsDict[tickId].Values.CopyTo(inputs.UserInputs, 0);
+                for (int i = 0; i < userInputsDict[tickId].Count; i++)
+                {
+                    var userInputs = userInputsDict[tickId][i];
+                    var number = userInputs.Number;
+                    var userId = userInputs.UserId;
+
+                    if (!inputsDict.ContainsKey(userId))
+                    {
+                        inputsDict.Add(userId, new Dictionary<int, List<UserInputs>>());
+                    }
+                    if (!inputsDict[userId].ContainsKey(number))
+                    {
+                        inputsDict[userId].Add(number, new List<UserInputs>());
+                    }
+                    inputsDict[userId][number].Add(userInputs);
+                }
             }
+
+            var index = 0;
+            var e = inputsDict.GetEnumerator();
+            var userInputsList = new List<List<UserInputs>>();
+            while (true)
+            {
+                userInputsList.Add(new List<UserInputs>());
+                while (e.MoveNext())
+                {
+                    var count = e.Current.Value.Count;
+                    if (index < count)
+                    {
+                        var keys = new int[count];
+                        e.Current.Value.Keys.CopyTo(keys, 0);
+                        userInputsList[index].AddRange(e.Current.Value[keys[index]]);
+                    }
+                }
+                if (userInputsList[index].Count <= 0)
+                {
+                    userInputsList.RemoveAt(index);
+                    break;
+                }
+                index++;
+            }
+
+            inputs.UserInputs = new UserInputs[userInputsList.Count][];
+            for (int i = 0; i < userInputsList.Count; i++)
+            {
+                userInputsList[i].CopyTo(inputs.UserInputs[i]);
+            }
+
             lockstepInputs.Add(inputs);
             TickId++;
             return inputs;
