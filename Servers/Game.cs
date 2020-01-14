@@ -34,14 +34,11 @@ namespace ServerFramework.Servers
                 lock (userInputsDict)
                 {
                     int tickId = TickId;
-                    if (tickId - userInputs.TickId < 5)
+                    if (!userInputsDict.ContainsKey(tickId))
                     {
-                        if (!userInputsDict.ContainsKey(tickId))
-                        {
-                            userInputsDict.Add(tickId, new List<UserInputs>());
-                        }
-                        userInputsDict[tickId].Add(userInputs);
+                        userInputsDict.Add(tickId, new List<UserInputs>());
                     }
+                    userInputsDict[tickId].Add(userInputs);
                 }
             }
             catch (Exception e)

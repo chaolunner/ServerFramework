@@ -9,6 +9,8 @@ namespace ServerFramework.Controller
     {
         private DateTime currentTime;
         private Dictionary<Room, Game> gameDict = new Dictionary<Room, Game>();
+        private const int InvalidTime = 5;
+        private const int MaxSyncAmount = 200;
 
         public string OnInput(Client client, byte[] dataBytes)
         {
@@ -24,22 +26,14 @@ namespace ServerFramework.Controller
                 Game game = gameDict[room];
                 UserInputs userInputs = MessagePackUtility.Deserialize<UserInputs>(dataBytes);
                 userInputs.UserId = userId;
-                game.AddUserInputs(userInputs);
-                return ((int)ReturnCode.Success).ToString();
-            }
-            return ((int)ReturnCode.Fail).ToString();
-        }
-
-        public string OnTimeline(Client client, string data)
-        {
-            int userId = this.GetController<UserController>().GetUserId(client);
-            Room room = this.GetController<RoomController>().GetRoomByUserId(userId);
-            if (room != null)
-            {
-                Game game = gameDict[room];
-                foreach (var lockstepInputs in game.GetTimeline(int.Parse(data)))
+                if (game.TickId - userInputs.TickId < InvalidTime)
                 {
-                    client.Publish(RequestCode.Lockstep, MessagePackUtility.Serialize(lockstepInputs));
+                    game.AddUserInputs(userInputs);
+                }
+                var timeline = game.GetTimeline(userInputs.TickId);
+                for (int i = 0; i < Math.Min(timeline.Count, MaxSyncAmount); i++)
+                {
+                    client.Publish(RequestCode.Lockstep, MessagePackUtility.Serialize(timeline[i]));
                 }
                 return ((int)ReturnCode.Success).ToString();
             }
