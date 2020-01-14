@@ -105,7 +105,8 @@ namespace ServerFramework.Servers
             inputs.UserInputs = new UserInputs[userInputsList.Count][];
             for (int i = 0; i < userInputsList.Count; i++)
             {
-                userInputsList[i].CopyTo(inputs.UserInputs[i]);
+                inputs.UserInputs[i] = new UserInputs[userInputsList[i].Count];
+                userInputsList[i].CopyTo(inputs.UserInputs[i], 0);
             }
 
             lockstepInputs.Add(inputs);
