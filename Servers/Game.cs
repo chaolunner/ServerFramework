@@ -9,6 +9,7 @@ namespace ServerFramework.Servers
         private Room room;
         private List<LockstepInputs> lockstepInputs;
         private Dictionary<int, List<UserInputs>> userInputsDict;
+        private Dictionary<int, int> userTimelineDict;
 
         public int Count
         {
@@ -25,6 +26,7 @@ namespace ServerFramework.Servers
             this.room = room;
             lockstepInputs = new List<LockstepInputs>();
             userInputsDict = new Dictionary<int, List<UserInputs>>();
+            userTimelineDict = new Dictionary<int, int>();
         }
 
         public void AddUserInputs(UserInputs userInputs)
@@ -111,9 +113,15 @@ namespace ServerFramework.Servers
             return inputs;
         }
 
-        public List<LockstepInputs> GetTimeline(int index)
+        public List<LockstepInputs> GetTimeline(int userId, int tickId)
         {
-            return lockstepInputs.GetRange(index, lockstepInputs.Count - index);
+            if (!userTimelineDict.ContainsKey(userId)) { userTimelineDict.Add(userId, -1); }
+            if (tickId > userTimelineDict[userId])
+            {
+                userTimelineDict[userId] = lockstepInputs.Count - 1;
+                return lockstepInputs.GetRange(tickId, lockstepInputs.Count - tickId);
+            }
+            return null;
         }
 
         public Client GetClient(int index)

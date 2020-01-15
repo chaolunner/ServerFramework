@@ -10,7 +10,7 @@ namespace ServerFramework.Controller
         private DateTime currentTime;
         private Dictionary<Room, Game> gameDict = new Dictionary<Room, Game>();
         private const int InvalidTime = 5;
-        private const int MaxSyncAmount = 200;
+        private const string SyncTimelineTips = "Synchronizing timeline... \n Client id [{0}], current server tick id [{1}], current client tick id [{2}].";
 
         public string OnInput(Client client, byte[] dataBytes)
         {
@@ -30,10 +30,17 @@ namespace ServerFramework.Controller
                 {
                     game.AddUserInputs(userInputs);
                 }
-                var timeline = game.GetTimeline(userInputs.TickId);
-                for (int i = 0; i < Math.Min(timeline.Count, MaxSyncAmount); i++)
+                else
                 {
-                    client.Publish(RequestCode.Lockstep, MessagePackUtility.Serialize(timeline[i]));
+                    var timeline = game.GetTimeline(userId, userInputs.TickId);
+                    if (timeline != null)
+                    {
+                        for (int i = 0; i < timeline.Count; i++)
+                        {
+                            client.Publish(RequestCode.Lockstep, MessagePackUtility.Serialize(timeline[i]));
+                        }
+                        ConsoleUtility.WriteLine(string.Format(SyncTimelineTips, userId, game.TickId, userInputs.TickId), ConsoleColor.White);
+                    }
                 }
                 return ((int)ReturnCode.Success).ToString();
             }
