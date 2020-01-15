@@ -116,7 +116,7 @@ namespace ServerFramework.Servers
         public List<LockstepInputs> GetTimeline(int userId, int tickId)
         {
             if (!userTimelineDict.ContainsKey(userId)) { userTimelineDict.Add(userId, -1); }
-            if (tickId > userTimelineDict[userId])
+            if (tickId >= userTimelineDict[userId])
             {
                 userTimelineDict[userId] = lockstepInputs.Count - 1;
                 return lockstepInputs.GetRange(tickId, lockstepInputs.Count - tickId);
