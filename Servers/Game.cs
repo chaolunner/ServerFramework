@@ -19,7 +19,7 @@ namespace ServerFramework.Servers
             }
         }
 
-        public int TickId { get; set; } = 0;
+        public int TickId { get { return lockstepInputs.Count; } }
 
         public Game(Room room)
         {
@@ -109,13 +109,12 @@ namespace ServerFramework.Servers
             }
 
             lockstepInputs.Add(inputs);
-            TickId++;
             return inputs;
         }
 
         public List<LockstepInputs> GetTimeline(int userId, int tickId)
         {
-            if (!userTimelineDict.ContainsKey(userId)) { userTimelineDict.Add(userId, -1); }
+            if (!userTimelineDict.ContainsKey(userId)) { userTimelineDict.Add(userId, 0); }
             if (tickId >= userTimelineDict[userId])
             {
                 userTimelineDict[userId] = lockstepInputs.Count - 1;
