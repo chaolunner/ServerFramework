@@ -31,11 +31,14 @@ namespace ServerFramework.Servers
             ClientList.Add(client);
         }
 
-        public void Publish(RequestCode requestCode, byte[] dataBytes)
+        public void Publish<T>(RequestCode requestCode, T data, params Client[] excludeClients)
         {
-            foreach (Client client in ClientList)
+            var excludeList = new List<Client>();
+            excludeList.AddRange(excludeClients);
+            for (int i = 0; i < ClientList.Count; i++)
             {
-                client.Publish(requestCode, dataBytes);
+                if (excludeList.Contains(ClientList[i])) { continue; }
+                ClientList[i].Publish(requestCode, data);
             }
         }
 

@@ -47,6 +47,18 @@ namespace ServerFramework.Controller
             return ((int)ReturnCode.Fail).ToString();
         }
 
+        public string OnAnalysis(Client client, string data)
+        {
+            int userId = this.GetController<UserController>().GetUserId(client);
+            Room room = this.GetController<RoomController>().GetRoomByUserId(userId);
+            if (room != null)
+            {
+                room.Publish(RequestCode.LockstepAnalysis, data, client);
+                return ((int)ReturnCode.Success).ToString();
+            }
+            return ((int)ReturnCode.Fail).ToString();
+        }
+
         public override void Update()
         {
             base.Update();
